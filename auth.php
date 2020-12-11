@@ -17,21 +17,29 @@ if($_SERVER['REQUEST_METHOD'] === 'GET'){
 }
 
 function loginUser($conn, $username, $password) {
-  $hash = password_hash($password, PASSWORD_DEFAULT);
   $sql = "
     SELECT * FROM Users 
-    WHERE username='$username' AND password='$hash'
+    WHERE username='$username'
     LIMIT 1
   ";
+
   $result = $conn->query($sql);
   $res;
 
   if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $res = array (
-      "ok" => true,
-      "user" => $row
-    );
+    $user = $result->fetch_assoc();
+    if (password_verify($password, $user['password'])) {
+      $res = array (
+        "ok" => true,
+        "user" => $user['username']
+      );
+    } else {
+      $res = array (
+        "ok" => false,
+        "msg" => "Incorrect credentials (pwd)"
+      );
+    }
+
   } else{
     $res = array (
       "ok" => false,

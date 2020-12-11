@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register</title>
   <link rel="stylesheet" href="main.css" />
-  <script href="storage.js"></script>
+  <script src="./storage.js"></script>
   <style>
     .register-popup {
       position: absolute;
@@ -79,10 +79,13 @@
       if (xhr.readyState === 4) {
         const res = JSON.parse(xhr.response)
         if (res.ok) {
-          storeCredentials({ username })
+          storeCredentials(username)
+          window.location.href = "index.html"
+        } else {
+          if (res.msg === "duplicate") {
+            alert("duplicate")
+          }
         }
-        storeCredentials(xhr.response)
-        window.location.href = "index.html"
       }
     }
   }
