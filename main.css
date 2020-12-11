@@ -4,3 +4,8 @@
   --secondary-color: #7f0000;
   --white: #ffffff;
 }
+
+body {
+  background-color: var(--bg-color);
+  font-family: "Ubuntu", sans-serif;
+}

@@ -1,8 +1,3 @@
-body {
-  background-color: var(--bg-color);
-  font-family: "Ubuntu", sans-serif;
-}
-
 .main {
   background-color: var(--white);
   width: 400px;

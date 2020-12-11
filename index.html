@@ -8,20 +8,77 @@
   <link rel="stylesheet" href="main.css" />
   <script src="storage.js"></script>
   <style>
+    h1 {
+      margin: 2rem;
+      text-align: center;
+      color: var(--white);
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     .home-content {
       display: flex;
       flex-direction: column;
       justify-content: space-around;
       align-items: center;
     }
+
+    .main {
+      background-color: var(--white);
+      width: 400px;
+      height: auto;
+      padding: 0 0 1rem 0;
+      margin-top: 10%;
+      border-radius: 1.5em;
+      box-shadow: 0px 11px 35px 2px rgba(0, 0, 0, 0.14);
+    }
+
+    button {
+      cursor: pointer;
+      border-radius: 5em;
+      color: var(--white);
+      background: linear-gradient(to right, var(--bg-color), var(--primary-color));
+      border: 0;
+      padding: 10px 30px;
+      min-width: 8rem;
+      margin: 1rem;
+      font-size: 16px;
+    }
+
+    button.play-button {
+      padding: 10px 60px;
+      font-size: x-large;
+    }
+
+    button.logout-btn {
+      background: var(--white);
+      color: var(--primary-color);
+      font-weight: bold;
+    }
   </style>
   <template id="logged-in">
-    <button>Play</button>
-    <button onclick='logout()'>Logout</button>
+    <div class="container">
+      <main class="main">
+        <div class="home-content" style="height: 8rem">
+          <button class="main-button" style="font-size: x-large; padding: 10px 60px">Play</button>
+        </div>
+      </main>
+      <button class="main-button logout-btn" onclick='logout()'>Logout</button>
+    </div>
   </template>
   <template id="not-logged-in">
-    <button onclick="toLogin()">Login</button>
-    <button onclick='toRegister()'>Register</button>
+    <div class="container">
+      <main class="main">
+        <div class="home-content">
+          <button class="main-button" onclick="toLogin()">Login</button>
+          <button class="main-button" onclick='toRegister()'>Register</button>
+        </div>
+      </main>
+    </div>
   </template>
   <script>
     function toLogin() {
@@ -39,10 +96,10 @@
       }
     }
     function handleLoggedIn() {
-      const home = document.querySelector("div.home-content")
+      const body = document.querySelector("#body")
       const loggedIn = document.getElementById("logged-in")
-      home.innerHTML = ""
-      home.appendChild(loggedIn.content.cloneNode(true))
+      body.innerHTML = ""
+      body.appendChild(loggedIn.content.cloneNode(true))
     }
 
     function logout() {
@@ -51,18 +108,17 @@
     }
 
     function handleNotLoggedIn() {
-      const home = document.querySelector("div.home-content")
+      const body = document.querySelector("#body")
       const notLoggedIn = document.getElementById("not-logged-in")
-      home.innerHTML = ""
-      home.appendChild(notLoggedIn.content.cloneNode(true))
+      body.innerHTML = ""
+      body.appendChild(notLoggedIn.content.cloneNode(true))
     }
   </script>
 </head>
 
 <body onload="onLoad()">
-  <main class="page">
-    <div class="home-content"></div>
-  </main>
+  <h1>Welcome to Battleship!</h1>
+  <div id="body"></div>
 </body>
 <script>
 </script>
