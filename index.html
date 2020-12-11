@@ -15,12 +15,20 @@
       align-items: center;
     }
   </style>
+  <template id="logged-in">
+    <button>Play</button>
+    <button onclick='logout()'>Logout</button>
+  </template>
+  <template id="not-logged-in">
+    <button onclick="toLogin()">Login</button>
+    <button onclick='toRegister()'>Register</button>
+  </template>
   <script>
     function toLogin() {
-      window.location.href = "login.html"
+      window.location.href = "auth/login.html"
     }
     function toRegister() {
-      window.location.href = "register.html"
+      window.location.href = "auth/register.html"
     }
     function onLoad() {
       const creds = getCredentials();
@@ -31,12 +39,10 @@
       }
     }
     function handleLoggedIn() {
-      console.log("logged in!")
       const home = document.querySelector("div.home-content")
-      home.innerHTML = `
-        <button>Play</button>
-        <button onclick='logout()'>Logout</button>
-      `
+      const loggedIn = document.getElementById("logged-in")
+      home.innerHTML = ""
+      home.appendChild(loggedIn.content.cloneNode(true))
     }
 
     function logout() {
@@ -45,20 +51,17 @@
     }
 
     function handleNotLoggedIn() {
-      console.log("not logged in!")
       const home = document.querySelector("div.home-content")
-      home.innerHTML = `
-      <button onclick="toLogin()">Login</button>
-      <button onclick="toRegister()">Register</button>
-      `
+      const notLoggedIn = document.getElementById("not-logged-in")
+      home.innerHTML = ""
+      home.appendChild(notLoggedIn.content.cloneNode(true))
     }
   </script>
 </head>
 
 <body onload="onLoad()">
   <main class="page">
-    <div class="home-content">
-    </div>
+    <div class="home-content"></div>
   </main>
 </body>
 <script>
