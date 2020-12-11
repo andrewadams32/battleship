@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Battleship</title>
   <link rel="stylesheet" href="main.css" />
+  <script src="storage.js"></script>
   <style>
     .home-content {
       display: flex;
@@ -21,14 +22,42 @@
     function toRegister() {
       window.location.href = "register.html"
     }
+    function onLoad() {
+      const creds = getCredentials();
+      if (creds) {
+        handleLoggedIn()
+      } else {
+        handleNotLoggedIn()
+      }
+    }
+    function handleLoggedIn() {
+      console.log("logged in!")
+      const home = document.querySelector("div.home-content")
+      home.innerHTML = `
+        <button>Play</button>
+        <button onclick='logout()'>Logout</button>
+      `
+    }
+
+    function logout() {
+      clearCredentials()
+      handleNotLoggedIn()
+    }
+
+    function handleNotLoggedIn() {
+      console.log("not logged in!")
+      const home = document.querySelector("div.home-content")
+      home.innerHTML = `
+      <button onclick="toLogin()">Login</button>
+      <button onclick="toRegister()">Register</button>
+      `
+    }
   </script>
 </head>
 
-<body>
+<body onload="onLoad()">
   <main class="page">
     <div class="home-content">
-      <button onclick="toLogin()">Login</button>
-      <button onclick="toRegister()">Register</button>
     </div>
   </main>
 </body>
