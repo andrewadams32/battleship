@@ -16,7 +16,18 @@ if($_SERVER['REQUEST_METHOD'] === 'GET'){
   } elseif(isset($_POST['find-match'])) {
     findOrWaitForGame($conn, $_POST['username']);
   } elseif(isset($_POST['stop-waiting'])) {
-    setUserWaiting($conn, $_POST['username'], false);
+    if(setUserWaiting($conn, $_POST['username'], false)) {
+      $res = array (
+        "ok" => true
+      );
+      echo json_encode($res);
+    } else {
+      $res = array (
+        "ok" => false,
+        "msg" => "unable to stop waiting"
+      );
+      echo json_encode($res);
+    }
   }
 }
 
@@ -81,24 +92,30 @@ function registerUser($conn, $username, $password) {
 }
 
 function setUserWaiting($conn, $username, $waiting) {
+  $waiting_bool = $waiting ? 1 : 0;
+  
   $sql = "
     UPDATE Users
-    SET waiting=$waiting
+    SET waiting='$waiting_bool'
     WHERE username='$username'
   ";
-
-  return $conn->query($sql);
+  if($conn->query($sql) === true) {
+    return true;
+  } else {
+    echo "err" . $conn->error;
+    return false;
+  }
 }
 
 function findOrWaitForGame($conn, $username) {
   $sql = "
     SELECT * FROM Users
-    WHERE waiting='1'
+    WHERE waiting='1', username <> '$username'
   ";
 
   $result = $conn->query($sql);
   $res;
-  if ($result->num_rows > 0) {
+  if ($result !== false) {
     $user = $result->fetch_assoc();
     $res = array (
       "match_found" => true,
