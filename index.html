@@ -22,7 +22,8 @@
     <main class="main">
       <div class="container">
         <div class="home-content" style="height: 8rem">
-          <button onclick="findMatch()" class="main-button" style="font-size: x-large; padding: 10px 60px">Play</button>
+          <button onclick="startMatchSearch()" class="main-button"
+            style="font-size: x-large; padding: 10px 60px">Play</button>
         </div>
       </div>
       <button class="main-button logout-btn" onclick='logout()'>Logout</button>
@@ -39,7 +40,7 @@
     </main>
   </template>
   <script>
-    var username;
+    var username, interval;
     function toLogin() {
       window.location.href = "auth/login.html"
     }
@@ -56,25 +57,32 @@
       }
     }
 
+    function startMatchSearch() {
+      if (!interval) {
+        interval = setInterval(findMatch, 1000 * 2);
+        const body = document.querySelector("#body")
+        const waiting = document.getElementById("waiting")
+        body.innerHTML = ""
+        body.appendChild(waiting.content.cloneNode(true))
+      }
+    }
+
     function findMatch() {
       const xhr = new XMLHttpRequest();
       let url = './server/users.php'
-      xhr.open("POST", url);
+      xhr.open("POST", url, true);
       xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.send(JSON.stringify({ username, "find-match": true }));
-      xhr.onreadystatechange = function () {
+      xhr.send(JSON.stringify({ username, "find-match": true }))
+      xhr.onreadystatechange = () => {
         if (xhr.readyState === 4) {
           const res = JSON.parse(xhr.response)
           if (res.match_found) {
             console.log("match found!")
+            clearInterval(interval)
             // window.location.href = "../"
           } else {
             console.log(res)
             console.log("match not found, waiting...")
-            const body = document.querySelector("#body")
-            const waiting = document.getElementById("waiting")
-            body.innerHTML = ""
-            body.appendChild(waiting.content.cloneNode(true))
           }
         }
       }

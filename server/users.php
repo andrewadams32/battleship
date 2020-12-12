@@ -107,25 +107,38 @@ function setUserWaiting($conn, $username, $waiting) {
   }
 }
 
-function findOrWaitForGame($conn, $username) {
+function findGame($conn, $username) {
   $sql = "
     SELECT * FROM Users
-    WHERE waiting='1', username <> '$username'
+    WHERE waiting='1' AND username <> '$username'
+    LIMIT 1
   ";
 
   $result = $conn->query($sql);
   $res;
-  if ($result !== false) {
+  if ($result->num_rows > 0) {
     $user = $result->fetch_assoc();
     $res = array (
       "match_found" => true,
       "opponent" => $user['username']
     );
-    
-    // TODO: create game in Games table with user and opponent as players
+    return $res;
+  } else {
+    return array (
+      "match_found" => false,
+      "msg" => $conn->error
+    );
+  }
+}
 
+function findOrWaitForGame($conn, $username) {
+
+  $res = findGame($conn, $username);
+  // TODO: create game in Games table with user and opponent as players
+  if($res['match_found'] === true) {
     echo json_encode($res);
   } else {
+    echo $res['msg'];
     if(setUserWaiting($conn, $username, true) === true) {
       $res = array (
         "match_found" => false,
