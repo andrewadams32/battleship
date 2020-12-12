@@ -25,7 +25,7 @@
 
   function sendCreds(username, password) {
     var xhr = new XMLHttpRequest();
-    let url = '../server/auth.php'
+    let url = '../server/users.php'
     xhr.open("POST", url);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.send(JSON.stringify({ username, password, login: true }));
@@ -33,7 +33,7 @@
       if (xhr.readyState === 4) {
         const res = JSON.parse(xhr.response)
         if (res.ok) {
-          storeCredentials({ creds: res.user })
+          storeCredentials({ username: res.user })
           window.location.href = "../"
         } else alert(res.msg)
       }

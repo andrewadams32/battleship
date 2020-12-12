@@ -6,81 +6,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Battleship</title>
   <link rel="stylesheet" href="main.css" />
+  <link rel="stylesheet" href="index.css" />
   <script src="storage.js"></script>
-  <style>
-    h1 {
-      margin: 2rem;
-      text-align: center;
-      color: var(--white);
-    }
-
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .home-content {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-around;
-      align-items: center;
-    }
-
-    .main {
-      background-color: var(--white);
-      width: 400px;
-      height: auto;
-      padding: 0 0 1rem 0;
-      margin-top: 10%;
-      border-radius: 1.5em;
-      box-shadow: 0px 11px 35px 2px rgba(0, 0, 0, 0.14);
-    }
-
-    button {
-      cursor: pointer;
-      border-radius: 5em;
-      color: var(--white);
-      background: linear-gradient(to right, var(--bg-color), var(--primary-color));
-      border: 0;
-      padding: 10px 30px;
-      min-width: 8rem;
-      margin: 1rem;
-      font-size: 16px;
-    }
-
-    button.play-button {
-      padding: 10px 60px;
-      font-size: x-large;
-    }
-
-    button.logout-btn {
-      background: var(--white);
-      color: var(--primary-color);
-      font-weight: bold;
-    }
-  </style>
-  <template id="logged-in">
-    <div class="container">
-      <main class="main">
+  <template id="waiting">
+    <main class="main">
+      <div class="container">
         <div class="home-content" style="height: 8rem">
-          <button class="main-button" style="font-size: x-large; padding: 10px 60px">Play</button>
+          <p>Waiting...</p>
         </div>
-      </main>
+        <button class="main-button" style="margin:auto" onclick='cancel()'>Cancel</button>
+      </div>
+    </main>
+  </template>
+  <template id="logged-in">
+    <main class="main">
+      <div class="container">
+        <div class="home-content" style="height: 8rem">
+          <button onclick="findMatch()" class="main-button" style="font-size: x-large; padding: 10px 60px">Play</button>
+        </div>
+      </div>
       <button class="main-button logout-btn" onclick='logout()'>Logout</button>
-    </div>
+    </main>
   </template>
   <template id="not-logged-in">
-    <div class="container">
-      <main class="main">
+    <main class="main">
+      <div class="container">
         <div class="home-content">
           <button class="main-button" onclick="toLogin()">Login</button>
           <button class="main-button" onclick='toRegister()'>Register</button>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   </template>
   <script>
+    var username;
     function toLogin() {
       window.location.href = "auth/login.html"
     }
@@ -89,12 +48,42 @@
     }
     function onLoad() {
       const creds = getCredentials();
-      if (creds) {
+      username = creds ? creds.username : null;
+      if (username) {
         handleLoggedIn()
       } else {
         handleNotLoggedIn()
       }
     }
+
+    function findMatch() {
+      const xhr = new XMLHttpRequest();
+      let url = './server/users.php'
+      xhr.open("POST", url);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(JSON.stringify({ username, "find-match": true }));
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          const res = JSON.parse(xhr.response)
+          if (res.match_found) {
+            console.log("match found!")
+            // window.location.href = "../"
+          } else {
+            console.log(res)
+            console.log("match not found, waiting...")
+            const body = document.querySelector("#body")
+            const waiting = document.getElementById("waiting")
+            body.innerHTML = ""
+            body.appendChild(waiting.content.cloneNode(true))
+          }
+        }
+      }
+    }
+
+    function cancel() {
+      handleLoggedIn()
+    }
+
     function handleLoggedIn() {
       const body = document.querySelector("#body")
       const loggedIn = document.getElementById("logged-in")
