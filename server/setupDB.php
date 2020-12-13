@@ -25,6 +25,7 @@
   }
   
   createDatabase($conn, $dbname);
+  $conn->select_db($dbname);
 
   if(!doesTableExist($conn, "Users")) {
     $sql = "CREATE TABLE Users (
@@ -32,8 +33,7 @@
       username VARCHAR(30) NOT NULL,
       password VARCHAR(255) NOT NULL,
       waiting BOOLEAN DEFAULT FALSE,
-      CONSTRAINT username_unique UNIQUE(username)   
-
+      CONSTRAINT username_unique UNIQUE(username)
     )";
     
     if ($conn->query($sql) === TRUE) {
@@ -46,11 +46,13 @@
   if(!doesTableExist($conn, "Games")) {
     $sql = "CREATE TABLE Games (
       id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-      player1 VARCHAR(30),
+      player1 VARCHAR(30) NOT NULL,
       player2 VARCHAR(30),
       winner VARCHAR(30),
       loser VARCHAR(30),
-      hasStarted BOOLEAN DEFAULT FALSE
+      hasStarted BOOLEAN DEFAULT FALSE,
+      board TINYTEXT,
+      turn VARCHAR(30)
     )";
     
     if ($conn->query($sql) === TRUE) {
@@ -58,6 +60,6 @@
     } else {
       echo "Error creating table: " . $conn->error;
     }
-  } else echo "users already exists"
+  } else echo "games already exists"
 
 ?>
