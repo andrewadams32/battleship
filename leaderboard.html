@@ -1,11 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Leaderboard</title>
+  <link rel="stylesheet" href="main.css" />
+  <style>
+    table {
+      border-collapse: collapse;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid black;
+    }
+  </style>
+  <template id="leaderboard-row">
+    <tr>
+      <td>
+        <p></p>
+      </td>
+      <td>
+        <p></p>
+      </td>
+    </tr>
+  </template>
+  <script>
+    function getLeaderBoard() {
+      const xhr = new XMLHttpRequest();
+      const url = "./server/game.php?leaderboard=true"
+      xhr.open("GET", url)
+      xhr.send()
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          const res = JSON.parse(xhr.response)
+          if (res.length > 0) {
+            console.log('res', res)
+            renderLeaderboard(res);
+          } else {
+            console.log('no leaderboard')
+          }
+        }
+      }
+    }
+    function renderLeaderboard(stats) {
+      const leaderboard = document.getElementById("leaderboard")
+      stats.forEach((stat) => {
+        const template = document.getElementById("leaderboard-row")
+        const row = template.content.cloneNode(true)
+        const ps = row.querySelectorAll("p")
+        ps[0].innerText = stat.player
+        ps[1].innerText = stat.winCount
+        leaderboard.appendChild(row)
+      })
+    }
+  </script>
 </head>
+
 <body>
-  Leaderboard Here
+  <h1>Leaderboard</h1>
+  <table id="leaderboard"></table>
 </body>
+<script>
+  document.body.onload = () => {
+    console.log("loaded")
+    getLeaderBoard();
+  }
+</script>
+
 </html>

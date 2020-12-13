@@ -2,7 +2,11 @@
 
 include "connection.php";
 
-if($_SERVER['REQUEST_METHOD'] === 'GET'){} 
+if($_SERVER['REQUEST_METHOD'] === 'GET'){
+  if(isset($_GET['leaderboard'])) {
+    getLeaderBoardStats($conn);
+  }
+} 
 elseif($_SERVER['REQUEST_METHOD'] === 'POST') {
   if ($_SERVER["CONTENT_TYPE"] === "application/json")
     $_POST = json_decode(file_get_contents("php://input"), true) ?: [];
@@ -17,6 +21,25 @@ elseif($_SERVER['REQUEST_METHOD'] === 'POST') {
   } 
 }
 
+//LEADERBOARD
+function getLeaderBoardStats($conn) {
+  $sql = "
+    SELECT winner, COUNT(*) as count 
+    FROM Games
+    GROUP BY winner 
+    ORDER BY COUNT(*) DESC
+  ";
+  $res = $conn->query($sql);
+  $stats = array();
+  if( $res->num_rows > 0) {
+    while($row = $res->fetch_assoc())
+      array_push($stats, array (
+        "player" => $row["winner"],
+        "winCount" => $row["count"]
+      ));
+  }
+  print_r(json_encode($stats));
+}
 
 //GAME SETUP
 function findGame($conn, $username) {
@@ -147,7 +170,7 @@ function updateBoard($conn, $board, $game_id) {
   //TODO : handle win/loss logic here
 
   //
-  
+
   $sql = "
     UPDATE Games
     SET board = '$board'

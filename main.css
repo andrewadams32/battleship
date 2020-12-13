@@ -9,3 +9,9 @@ body {
   background-color: var(--bg-color);
   font-family: "Ubuntu", sans-serif;
 }
+
+h1 {
+  margin: 2rem;
+  text-align: center;
+  color: var(--white);
+}

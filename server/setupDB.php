@@ -51,7 +51,8 @@
       winner VARCHAR(30),
       loser VARCHAR(30),
       hasStarted BOOLEAN DEFAULT FALSE,
-      board TINYTEXT,
+      player1Board TINYTEXT,
+      player2Board TINYTEXT,
       turn VARCHAR(30)
     )";
     

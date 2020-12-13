@@ -1,6 +1,10 @@
 <?php
 
-function renderTable() {
+function renderPlayerBoard($board) {
+  
+}
+
+function renderOpponentBoard($board) {
   
 }
 
