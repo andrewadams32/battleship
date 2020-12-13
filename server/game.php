@@ -17,6 +17,8 @@ elseif($_SERVER['REQUEST_METHOD'] === 'POST') {
   } 
 }
 
+
+//GAME SETUP
 function findGame($conn, $username) {
   $sql = "
     SELECT * FROM Games
@@ -113,6 +115,54 @@ function findOrCreateGame($conn, $username) {
       "match_found" => false,
       "game_created" => false,
       "msg" => "error creating game"
+    ));
+  }
+}
+
+
+//GAMEPLAY
+function getGame($conn, $game_id) {
+  $sql = "
+    SELECT * FROM Games
+    WHERE hasStarted='1' AND id='$game_id'
+  ";
+
+  $result = $conn->query($sql);
+  if ($result !== false) {
+    $game = $result->fetch_assoc();
+    echo json_encode(array (
+      "game" => $game,
+    ));
+  } else {
+    echo json_encode(array (
+      "ok" => false,
+      "msg" => $conn->error
+    ));
+  }
+}
+
+//GAMEPLAY
+function updateBoard($conn, $board, $game_id) {
+
+  //TODO : handle win/loss logic here
+
+  //
+  
+  $sql = "
+    UPDATE Games
+    SET board = '$board'
+    WHERE id = '$game_id';
+  ";
+
+  $result = $conn->query($sql);
+  if ($result !== false) {
+    echo json_encode(array (
+      "ok" => true,
+    ));
+  } else {
+    echo json_encode(array (
+      "ok" => false,
+      "msg" => $conn->error
     ));
   }
 }
