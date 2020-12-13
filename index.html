@@ -22,7 +22,7 @@
     <main class="main">
       <div class="container">
         <div class="home-content" style="height: 8rem">
-          <button onclick="startMatchSearch()" class="main-button"
+          <button onclick="findOrCreateMatch()" class="main-button"
             style="font-size: x-large; padding: 10px 60px">Play</button>
         </div>
       </div>
@@ -40,7 +40,7 @@
     </main>
   </template>
   <script>
-    var username, interval;
+    var username, waitInterval, gameId;
     function toLogin() {
       window.location.href = "auth/login.html"
     }
@@ -57,32 +57,51 @@
       }
     }
 
-    function startMatchSearch() {
-      if (!interval) {
-        interval = setInterval(findMatch, 1000 * 2);
-        const body = document.querySelector("#body")
-        const waiting = document.getElementById("waiting")
-        body.innerHTML = ""
-        body.appendChild(waiting.content.cloneNode(true))
-      }
+    function waitForSecondPlayer() {
+      waitInterval = setInterval(() => {
+        const xhr = new XMLHttpRequest();
+        let url = './server/game.php'
+        xhr.open("POST", url, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(JSON.stringify({ game_id: gameId, username, "player-2-joined": true }))
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState === 4) {
+            const res = JSON.parse(xhr.response)
+            if (res.player_joined) {
+              console.log("player joined!", res.opponent)
+              clearInterval(waitInterval)
+              // window.location.href = "../"
+            } else {
+              console.log("still waiting", res.msg)
+            }
+          }
+        }
+      }, 1000)
+      const body = document.querySelector("#body")
+      const waiting = document.getElementById("waiting")
+      body.innerHTML = ""
+      body.appendChild(waiting.content.cloneNode(true))
     }
 
-    function findMatch() {
+    function findOrCreateMatch() {
       const xhr = new XMLHttpRequest();
-      let url = './server/users.php'
+      let url = './server/game.php'
       xhr.open("POST", url, true);
       xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.send(JSON.stringify({ username, "find-match": true }))
+      xhr.send(JSON.stringify({ username, "find-or-create": true }))
       xhr.onreadystatechange = () => {
         if (xhr.readyState === 4) {
           const res = JSON.parse(xhr.response)
           if (res.match_found) {
-            console.log("match found!")
-            clearInterval(interval)
+            console.log("match found!", res.opponent)
+            gameId = res.game_id
             // window.location.href = "../"
+          } else if (res.game_created) {
+            console.log("game not found, created one", res.game_id)
+            gameId = res.game_id
+            waitForSecondPlayer()
           } else {
-            console.log(res)
-            console.log("match not found, waiting...")
+            console.log("error", res.msg)
           }
         }
       }
@@ -90,18 +109,19 @@
 
     function cancel() {
       const xhr = new XMLHttpRequest();
-      let url = './server/users.php'
+      let url = './server/game.php'
       xhr.open("POST", url);
       xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.send(JSON.stringify({ username, "stop-waiting": true }));
-
+      xhr.send(JSON.stringify({ username, "cancel-game": true }));
       xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) {
           const res = JSON.parse(xhr.response)
+          console.log('cancel res', res)
           if (res.ok) {
+            clearInterval(waitInterval);
             handleLoggedIn()
           } else {
-            alert("problem")
+            alert(res.msg)
           }
         }
       }
