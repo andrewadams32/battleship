@@ -1,237 +1,386 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <style>
-    table tbody tr td {
-      width: 100%;
-      border: 1px solid black;
-      height: 100px;
-    }
-
-    thead {
-      width: 100%;
-      color: red;
-      border: 2px solid green;
-      height: 300px;
-      width: 100%;
-      size: small;
-    }
-
-    .background {
-      box-sizing: border-box;
-      width: 100%;
-      height: 100%;
-      padding: 3px;
-      background-image: url(ocean.gif);
-      border: 1px solid black;
-      background-size: 100% 200%;
-    }
-  </style>
-  <link rel="stylesheet" href="main.css" />
+<style>
+table tbody tr td{
+width:  100%;
+border: 1px solid black;
+height:100px;
+}
+thead {
+width: 100%;
+color: red;
+border: 2px solid green;
+height 300 px;
+width: 100%;
+size: small;
+}
+.background {
+box-sizing: border-box;
+width: 100%;
+height: 100%;
+padding: 3px;
+background-image: url(ocean.gif);
+border: 1px solid black;
+background-size: 100% 200%;
+}
+</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Play Battleship</title>
 </head>
+<body class ="background" onload="insertObject();insertObject2();myTimer();">
+<script>
+var time1 = new Date();
+var timed = setInterval(myTimer, 1000);
+  var board = new Array(100).fill(0);
+  var board2 = new Array(100).fill(0);
+  var alphabet = new Array(10);
+  alphabet[0] = "A"; alphabet[1] = "B"; alphabet[2] = "C"; alphabet[3] = "D"; alphabet[4] = "E";
+  alphabet[5] = "F"; alphabet[6] = "G"; alphabet[7] = "H"; alphabet[8] = "I"; alphabet[9] = "J";
+  var turn = 1;
+  
+function playSound () {
+    document.getElementById('play').play();
+}
+  
+function myTimer() {
+  var time2 = new Date();
+  var dif = time2-time1; dif /= 1000;
+  dif = Math.floor(dif);
+  document.getElementById("timee").innerHTML = dif;
+} 
+  
+function insertObject() {
 
-<body class="background" onload="insertObject();">
-  <script>
-    var board = new Array(100).fill(0);
-    function insertObject() {
-
-      var myTable = document.getElementById('tableData');
-      tableData.style.cssText = 'height:60px;width:90%;border: 1px solid black;';
-      for (i = 0; i < 10; i++) {
-        var row = document.createElement('tr');
-        row.style.cssText = 'border: 1px solid black'
-        //var rowObj = data[i];
-        for (var u = 0; u < 10; u++) {
-          var dataEl = document.createElement('td');
-          dataEl.id = (i + (u * 10));
-          console.log(dataEl.id);
-          dataEl.innerHTML = '<input type = "checkbox">';
-          dataEl.style.cssText = 'height:60px;width:10.2%;border: 1px solid black;';
-          row.appendChild(dataEl);
-        }
-        myTable.appendChild(row);
-      }
+  var myTable = document.getElementById('tableData');
+  tableData.style.cssText = 'height:60px;width:90%;border: 1px solid black;';
+  for (i = 0; i < 10; i++) {
+    var row = document.createElement('tr');
+		var heed = document.createElement('th');
+		row.appendChild(heed);
+	heed.innerHTML = alphabet[i];
+	row.style.cssText = 'border: 1px solid black'
+    //var rowObj = data[i];
+    for (var u = 0; u < 10; u++) {
+      var dataEl = document.createElement('td');
+	  dataEl.id = (i+(u*10));
+	  //dataEl.innerHTML = '<input type = "checkbox">';
+	  dataEl.style.cssText = 'height:60px;width:10.2%;border: 1px solid black;';
+      row.appendChild(dataEl);
+    }
+    myTable.appendChild(row);
+  }
+  
 
 
+/*for (var i = 0; i < board.length; i++) {
+  board[i] = new Array(10);
+  for(var k = 0; k < 10; k++){ 
+  board[i][k] =5;
+  }
+}
+for (var o = 0; o < board.length; o++) {
 
-      /*for (var i = 0; i < board.length; i++) {
-        board[i] = new Array(10);
-        for(var k = 0; k < 10; k++){ 
-        board[i][k] =5;
-        }
-      }
-      for (var o = 0; o < board.length; o++) {
+  for(var g = 0; g < 10; g++){
+board[o][g] = 5;  
+ console.log(board[0][0])
+  }
+}*/
+var r = document.getElementById(12);
+var w = r.innerHTML;
+
+
+//w = '<input type = "button" checked>';
+//console.log(r);
+//console.log(w);
+}
+
+function insertObject2() {
+var errror = 1;
+
+ var myTable = document.getElementById('table2Data');
+  table2Data.style.cssText = 'height:60px;width:90%;border: 1px solid black;';
+  for (i = 0; i < 10; i++) {
+    var row = document.createElement('tr');
+	var heed = document.createElement('th');
+		row.appendChild(heed);
+	heed.innerHTML = alphabet[i];
+	
+	row.style.cssText = 'border: 1px solid black'
+    //var rowObj = data[i];
+    for (var u = 0; u < 10; u++) {
+      var dataEl = document.createElement('td');
+	  dataEl.id = (100+(i+(u*10)));
+	//  dataEl.innerHTML = '<input type = "checkbox">';
+	  dataEl.style.cssText = 'height:60px;width:10.2%;border: 1px solid black;';
       
-        for(var g = 0; g < 10; g++){
-      board[o][g] = 5;  
-       console.log(board[0][0])
-        }
-      }*/
-      var r = document.getElementById(12);
-      var w = r.innerHTML;
-
-
-      w = '<input type = "button" checked>';
-      //console.log(r);
-      //console.log(w);
+	  row.appendChild(dataEl);
+	  
     }
+    myTable.appendChild(row);
+  }
+  
+var r = document.getElementById(12);
+var w = r.innerHTML;
 
-    function setarray() {
-      var a = getElementById("Carrier");
+//w = '<input type = "button" checked>';
 
-    }
-    function coords() {
-      var ships = new Array(5);
-      var shipsdir = new Array(5);
-      var e = document.getElementById("Carrier").value;
-      var d = document.getElementById("Battleship").value;
-      var c = document.getElementById("Cruiser").value;
-      var b = document.getElementById("Submarine").value;
-      var a = document.getElementById("Destroyer").value;
-      var f = document.getElementById("Direction1").value;
-      var g = document.getElementById("Direction2").value;
-      var h = document.getElementById("Direction3").value;
-      var i = document.getElementById("Direction4").value;
-      var j = document.getElementById("Direction5").value;
+}
 
-      shipsdir[4] = f;
-      shipsdir[3] = g;
-      shipsdir[2] = h;
-      shipsdir[1] = i;
-      shipsdir[0] = j;
+function reed(){
+for(var d = 0; d < board.length; d++){
+console.log(board[d]);
+}
+}
 
-      ships[0] = a;
-      ships[1] = b;
-      ships[2] = c;
-      ships[3] = d;
-      ships[4] = e;
-      var boatlen = 1;
-      for (var i = 0; i < ships.length; i++) {
-        var str = ships[i];
-        var dir = shipsdir[i];
-        var dir2 = 0;
-        var letter = 0;
-        var str2 = str.charAt(1);
-        var num = 0;
-        var loc = 0;
-        var tmp = 0;
-        var counter = 0;
+function firee(){
+var a = document.getElementById("fire").value;
+var loc = 0;
+var str2 = a.substring(1,3);
+var letter = 0;
+var num = 0;
 
-        if (dir == "Right") { dir2 = 10; }
-        if (dir == "Left") { dir2 = -10; }
-        if (dir == "Up") { dir2 = -1; }
-        if (dir == "Down") { dir2 = 1; }
+if(a.charAt(0) == 'A'){letter = 0}
+if(a.charAt(0) == 'B'){letter = 1}
+if(a.charAt(0) == 'C'){letter = 2}
+if(a.charAt(0) == 'D'){letter = 3}
+if(a.charAt(0) == 'E'){letter = 4}
+if(a.charAt(0) == 'F'){letter = 5}
+if(a.charAt(0) == 'G'){letter = 6}
+if(a.charAt(0) == 'H'){letter = 7}
+if(a.charAt(0) == 'I'){letter = 8}
+if(a.charAt(0) == 'J'){letter = 9}
+num = (parseInt(str2))-1;
+loc = 100+((num*10) + letter);
+loc2 = ((num*10) + letter);
+if(board2[loc2] == 0){
+board2[loc2] = 2;
+var u = document.getElementById(loc);
+u.style.backgroundColor = "Red";
+}
+else if(board2[loc2] == 1){
+board2[loc2] = 3;
+var u = document.getElementById(loc);
+u.style.backgroundColor = "DarkRed";
+}
+else if(board2[loc2] == 2 || board2[loc2] == 3){
+alert("You already fired here, so let me save you a turn");
+}
 
-        if (str.charAt(0) == 'A') { letter = 0 }
-        if (str.charAt(0) == 'B') { letter = 1 }
-        if (str.charAt(0) == 'C') { letter = 2 }
-        if (str.charAt(0) == 'D') { letter = 3 }
-        if (str.charAt(0) == 'E') { letter = 4 }
-        if (str.charAt(0) == 'F') { letter = 5 }
-        if (str.charAt(0) == 'G') { letter = 6 }
-        if (str.charAt(0) == 'H') { letter = 7 }
-        if (str.charAt(0) == 'I') { letter = 8 }
-        if (str.charAt(0) == 'J') { letter = 9 }
-        num = (parseInt(str2)) - 1;
-        loc = (num * 10) + letter;
-        var box = document.getElementById(loc);
-        console.log(box);
-        //var color = document.getElementById(box);
+}
+
+function setarray(){
+var a = document.getElementById("Carrier");
+
+}
+function coords(){
+var ships = new Array(5);
+var shipsdir = new Array(5);
+var prev = 0;
+var errror = 0;
+var e = document.getElementById("Carrier").value;
+var d = document.getElementById("Battleship").value;
+var c = document.getElementById("Cruiser").value;
+var b = document.getElementById("Submarine").value;
+var a = document.getElementById("Destroyer").value;
+var f = document.getElementById("Direction1").value;
+var g = document.getElementById("Direction2").value;
+var h = document.getElementById("Direction3").value;
+var i = document.getElementById("Direction4").value;
+var j = document.getElementById("Direction5").value;
+
+shipsdir[4] = f;
+shipsdir[3] = g;
+shipsdir[2] = h;
+shipsdir[1] = i;
+shipsdir[0] = j;
+
+ships[0] = a;
+ships[1] = b;
+ships[2] = c;
+ships[3] = d;
+ships[4] = e;
+var boatlen = 1;
+for (var i = 0; i <ships.length; i++){
+var str = ships[i];
+var dir = shipsdir[i];
+var dir2 = 0;
+var letter = 0;
+var str2 = str.substring(1,3);
+console.log(str2);
+var num = 0;
+var loc = 0;
+var tmp = 0;
+var tmp3 = 0;
+var counter = 0;
+
+if(dir == "Right"){dir2 = 10;}
+if(dir == "Left"){dir2 = -10;}
+if(dir == "Up"){dir2 = -1;}
+if(dir == "Down"){dir2 = 1;}
+
+if(str.charAt(0) == 'A'){letter = 0}
+if(str.charAt(0) == 'B'){letter = 1}
+if(str.charAt(0) == 'C'){letter = 2}
+if(str.charAt(0) == 'D'){letter = 3}
+if(str.charAt(0) == 'E'){letter = 4}
+if(str.charAt(0) == 'F'){letter = 5}
+if(str.charAt(0) == 'G'){letter = 6}
+if(str.charAt(0) == 'H'){letter = 7}
+if(str.charAt(0) == 'I'){letter = 8}
+if(str.charAt(0) == 'J'){letter = 9}
+num = (parseInt(str2))-1;
+loc = (num*10) + letter;
+var box = document.getElementById(loc);
+console.log(box);
+//var color = document.getElementById(box);
 
 
-        for (var t = 0; t < boatlen; t++) {
-          board[loc] = 1;
-          box.style.backgroundColor = "Gray"
-          //box.style.backgroundColor="Gray"
-          tmp2 = (loc + dir2);
-          tmp = document.getElementById(tmp2);
-          tmp.style.backgroundColor = "Gray";
-          if (t > 0) {
-            tmp2 = tmp2 + dir2; tmp = document.getElementById(tmp2);
-            tmp.style.backgroundColor = "Gray";
-          }
-          if (t > 2) {
-            tmp2 = tmp2 + dir2; tmp = document.getElementById(tmp2);
-            tmp.style.backgroundColor = "Gray";
-          }
-          if (t > 3) {
-            tmp2 = tmp2 + dir2; tmp = document.getElementById(tmp2);
-            tmp.style.backgroundColor = "Gray";
-          }
-          if (t > 4) {
-            tmp2 = tmp2dir2; tmp = document.getElementById(tmp2);
-            tmp.style.backgroundColor = "Gray";
-          }
-        }
-        boatlen = boatlen + 1;
-        //box.style.backgroundColor="Gray"
-      }
-    }
+for(var t = 0; t < boatlen; t++){
+board[loc] = 1;
+box.style.backgroundColor="Gray";
+prev = loc;
+tmp2 = (loc+dir2);
+errror = 0;
+tmp3 = parseInt(tmp2/10);
+if((tmp3 != (prev / 10)) && (dir == "Up" || dir == "Down")){
+errror = 1;
+console.log((tmp2/10) != (prev/10));
+console.log((tmp2/10));
+console.log((prev/10));
+tmp2 = tmp2-dir2;
+}
+if(((tmp2 < 10) && (dir == "Left")) || (((tmp2 > 90) && (dir == "Right")))){
+errror = 1;
+tmp2 = tmp2-dir2;
+}
+board[tmp2] = 1;
+tmp =document.getElementById(tmp2);
+tmp.style.backgroundColor="Gray";
+if(t > 0){tmp2 = tmp2+dir2;
+tmp3 = parseInt(tmp2/10);
+if(((tmp2 < 0) || (tmp3 != (prev / 10))) && (dir == "Up" || dir == "Down")){
+errror = 1;
+tmp2 = tmp2-dir2;
+}
+if(((tmp2 < 10) && (dir == "Left")) || (((tmp2 > 90) && (dir == "Right")))){
+errror = 1;
+tmp2 = tmp2-dir2;
+}
+board[tmp2] = 1;
+ tmp = document.getElementById(tmp2);
+  tmp.style.backgroundColor="Gray";}
+if(t > 2){tmp2 = tmp2+dir2;
+tmp3 = parseInt(tmp2/10);
+if(((tmp2 < 0) || (tmp3 != (prev / 10))) && (dir == "Up" || dir == "Down")){
+errror = 1;
+tmp2 = tmp2-dir2;
+}
+if(((tmp2 < 10) && (dir == "Left")) || (((tmp2 > 90) && (dir == "Right")))){
+errror = 1;
+tmp2 = tmp2-dir2;
+}
+board[tmp2] = 1;
+ tmp = document.getElementById(tmp2);
+  tmp.style.backgroundColor="Gray";}
+if(t > 3){tmp2 = tmp2+dir2;
+tmp3 = parseInt(tmp2/10);
+if(((tmp2 < 0) || (tmp3 != (prev / 10))) && (dir == "Up" || dir == "Down")){
+errror = 1;
+tmp2 = tmp2-dir2;
+}
+if(((tmp2 < 10) && (dir == "Left")) || (((tmp2 > 90) && (dir == "Right")))){
+errror = 1;
+tmp2 = tmp2-dir2;
+}
+board[tmp2] = 1;
+ tmp = document.getElementById(tmp2);
+ tmp.style.backgroundColor="Gray";}
+}
 
-  </script>
-  Game Here
+boatlen = boatlen+1;
+//box.style.backgroundColor="Gray"
+}
+if(errror == 1){
+alert("Invalid Positions, I hope you're not trying to cheat");
+}
+}
+
+</script>
+  <center> <div style="width:20%; color:white text-shadow: 1px 1px #FFFFF;"> <B>Battleship: By Andrew Adams and Joseph Bocanegra </B></div> </center>
+  <audio id="play" src="cannon.wav"></audio>
+  <p id="timee"> </p>
   <form id="form">
 
-  </form>
-  <table id="tableData"></table>
+</form>
+<table id="tableData">
+<th>  </th>
+<th> 1 </th><th> 2 </th><th> 3 </th><th> 4 </th><th> 5 </th>
+<th> 6 </th><th> 7 </th><th> 8 </th><th> 9 </th><th> 10 </th>
+</table>
   <form id="form2" style="background-color: white;width:93%">
 
-    Carrier
-    <input type="text" maxlength="2" style="width: 40px" id="Carrier"></input>
-    <label for="Direction1">Direction</label>
-    <select name="Direction1" id="Direction1">
-      <option value="Right">Right</option>
-      <option value="Left">Left</option>
-      <option value="Up">Up</option>
-      <option value="Down">Down</option>
-    </select>
-    Battleship
+ Carrier
+ <input type="text" maxlength = "3" style="width: 40px" id="Carrier"></input>
+ <label for="Direction1">Direction</label>
+ <select name="Direction1" id= "Direction1">
+ <option value="Right">Right</option>
+ <option value="Left">Left</option>
+ <option value="Up">Up</option>
+ <option value="Down">Down</option>
+ </select>
+ Battleship
+ 
+ <input type="text" maxlength = "3" style="width: 40px" id="Battleship"></input>
+  <label for="Direction2">Direction</label>
+ <select name="Direction2" id= "Direction2">
+ <option value="Right">Right</option>
+ <option value="Left">Left</option>
+ <option value="Up">Up</option>
+ <option value="Down">Down</option>
+ </select> 
+ Cruiser
+ <input type="text" maxlength = "3" style="width: 40px" id="Cruiser"></input>
+  <label for="Direction3">Direction</label>
+ <select name="Direction3" id= "Direction3">
+ <option value="Right">Right</option>
+ <option value="Left">Left</option>
+ <option value="Up">Up</option>
+ <option value="Down">Down</option>
+ </select> 
+ Submarine
+ <input type="text" maxlength = "3" style="width: 40px" id="Submarine"></input>
+  <label for="Direction4">Direction</label>
+ <select name="Direction4" id= "Direction4">
+ <option value="Right">Right</option>
+ <option value="Left">Left</option>
+ <option value="Up">Up</option>
+ <option value="Down">Down</option>
+ </select> 
+ Destroyer
+ <input type="text" maxlength = "3" style="width: 40px" id="Destroyer"></input>
+  <label for="Direction5">Direction</label>
+ <select name="Direction5" id= "Direction5">
+ <option value="Right">Right</option>
+ <option value="Left">Left</option>
+ <option value="Up">Up</option>
+ <option value="Down">Down</option>
+ </select> 
+<button type="button" onclick="coords();reed();">Set</button>
+</form>
+<br>
+  <form id="form3" style="background-color: white;width:93%">
+ <input type="text" maxlength = "3" style="width: 40px" id="fire"></input>
+<button type="button" onclick="firee();playSound();">Fire</button>
+</form>
+<br>
+<table id="table2Data">
+<th>  </th><th> 1 </th><th> 2 </th><th> 3 </th><th> 4 </th><th> 5 </th>
+<th> 6 </th><th> 7 </th><th> 8 </th><th> 9 </th><th> 10 </th>
+</table>
 
-    <input type="text" maxlength="2" style="width: 40px" id="Battleship"></input>
-    <label for="Direction2">Direction</label>
-    <select name="Direction2" id="Direction2">
-      <option value="Right">Right</option>
-      <option value="Left">Left</option>
-      <option value="Up">Up</option>
-      <option value="Down">Down</option>
-    </select>
-    Cruiser
-    <input type="text" maxlength="2" style="width: 40px" id="Cruiser"></input>
-    <label for="Direction3">Direction</label>
-    <select name="Direction3" id="Direction3">
-      <option value="Right">Right</option>
-      <option value="Left">Left</option>
-      <option value="Up">Up</option>
-      <option value="Down">Down</option>
-    </select>
-    Submarine
-    <input type="text" maxlength="2" style="width: 40px" id="Submarine"></input>
-    <label for="Direction4">Direction</label>
-    <select name="Direction4" id="Direction4">
-      <option value="Right">Right</option>
-      <option value="Left">Left</option>
-      <option value="Up">Up</option>
-      <option value="Down">Down</option>
-    </select>
-    Destroyer
-    <input type="text" maxlength="2" style="width: 40px" id="Destroyer"></input>
-    <label for="Direction5">Direction</label>
-    <select name="Direction5" id="Direction5">
-      <option value="Right">Right</option>
-      <option value="Left">Left</option>
-      <option value="Up">Up</option>
-      <option value="Down">Down</option>
-    </select>
-    <button type="button" onclick=coords();>Set</button>
-  </form>
 
-  <iframe width="560" height="315"
-    src="https://www.youtube.com/embed/videoseries?list=PLncQ2BTzvewx-U77-NTDldyXClijZaYiZ&autoplay=1" frameborder="0"
-    allow="autoplay; encrypted-media" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/videoseries?list=PLncQ2BTzvewx-U77-NTDldyXClijZaYiZ&autoplay=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </body>
-
 </html>
