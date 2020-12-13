@@ -11,10 +11,15 @@
       border-collapse: collapse;
     }
 
-    table,
+    tr:first-child td {
+      border: none;
+    }
+
     th,
     td {
       border: 1px solid black;
+      min-width: 5rem;
+      text-align: center;
     }
   </style>
   <template id="leaderboard-row">
@@ -47,6 +52,7 @@
     }
     function renderLeaderboard(stats) {
       const leaderboard = document.getElementById("leaderboard")
+      stats = [{ player: "Player", winCount: "Win Count" }, ...stats]
       stats.forEach((stat) => {
         const template = document.getElementById("leaderboard-row")
         const row = template.content.cloneNode(true)
@@ -61,7 +67,11 @@
 
 <body>
   <h1>Leaderboard</h1>
-  <table id="leaderboard"></table>
+  <main class="main">
+    <div class="container mt-1">
+      <table id="leaderboard"></table>
+    </div>
+  </main>
 </body>
 <script>
   document.body.onload = () => {
