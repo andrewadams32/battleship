@@ -42,7 +42,6 @@
         if (xhr.readyState === 4) {
           const res = JSON.parse(xhr.response)
           if (res.length > 0) {
-            console.log('res', res)
             renderLeaderboard(res);
           } else {
             console.log('no leaderboard')

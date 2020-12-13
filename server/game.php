@@ -27,7 +27,7 @@ function getLeaderBoardStats($conn) {
     SELECT winner, COUNT(*) as count 
     FROM Games
     GROUP BY winner 
-    ORDER BY COUNT(*) DESC
+    ORDER BY count DESC
   ";
   $res = $conn->query($sql);
   $stats = array();
