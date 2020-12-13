@@ -1,40 +1,11 @@
-input {
-  border-radius: 0.2rem;
-  border: 1px solid black;
-  padding: 3px 10px;
-  margin: 0.5rem;
-  height: 1.5rem;
-  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
-  -moz-box-sizing: border-box; /* Firefox, other Gecko */
-  box-sizing: border-box; /* Opera/IE 8+ */
+:root {
+  --bg-color: #b71c1c;
+  --primary-color: #f05545;
+  --secondary-color: #7f0000;
+  --white: #ffffff;
 }
 
-button {
-  border-radius: 0.1rem;
-  border: 1px solid black;
-  padding: 3px 10px;
-  margin: 0.5rem;
-  height: 1.5rem;
-  box-shadow: none;
-}
-
-.page {
-  height: 100%;
-  width: 100%;
-  padding: 0.5rem;
-}
-.card {
-  background-color: grey;
-  border: 2px solid black;
-  border-radius: 2rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.card-lg {
-  width: 20rem;
-  height: 10rem;
-  padding: 1rem;
+body {
+  background-color: var(--bg-color);
+  font-family: "Ubuntu", sans-serif;
 }

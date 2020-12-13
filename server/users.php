@@ -13,6 +13,21 @@ if($_SERVER['REQUEST_METHOD'] === 'GET'){
     registerUser($conn, $_POST['username'], $_POST['password']);
   } elseif(isset($_POST['login'])) {
     loginUser($conn, $_POST['username'], $_POST['password']);
+  } elseif(isset($_POST['find-match'])) {
+    findOrWaitForGame($conn, $_POST['username']);
+  } elseif(isset($_POST['stop-waiting'])) {
+    if(setUserWaiting($conn, $_POST['username'], false)) {
+      $res = array (
+        "ok" => true
+      );
+      echo json_encode($res);
+    } else {
+      $res = array (
+        "ok" => false,
+        "msg" => "unable to stop waiting"
+      );
+      echo json_encode($res);
+    }
   }
 }
 
@@ -75,6 +90,4 @@ function registerUser($conn, $username, $password) {
   }
   echo json_encode($res);
 }
-
-
 ?>

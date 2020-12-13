@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="stylesheet" href="../main.css" />
+  <link rel="stylesheet" href="./auth.css" />
+  <script src="../storage.js"></script>
+</head>
+
+<body>
+  <div class="main">
+    <p class="sign" align="center">Sign In</p>
+    <form>
+      <input class="auth-input" type="text" align="center" placeholder="Username">
+      <input class="auth-input" type="password" align="center" placeholder="Password">
+      <button class="submit-btn" align="center">Sign In</button>
+      <a href="register.html">Don't have an account?</a>
+    </form>
+  </div>
+</body>
+<script>
+
+  function sendCreds(username, password) {
+    var xhr = new XMLHttpRequest();
+    let url = '../server/users.php'
+    xhr.open("POST", url);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(JSON.stringify({ username, password, login: true }));
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        const res = JSON.parse(xhr.response)
+        if (res.ok) {
+          storeCredentials({ username: res.user })
+          window.location.href = "../"
+        } else alert(res.msg)
+      }
+    }
+  }
+
+  document.querySelector("form").addEventListener("submit", (e) => {
+    e.preventDefault()
+    let username = e.target['0'].value.trim()
+    let password = e.target['1'].value.trim()
+    if (username.length > 0 && password.length > 0) {
+      sendCreds(username, password)
+    }
+  })
+</script>
+
+</html>

@@ -6,31 +6,151 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Battleship</title>
   <link rel="stylesheet" href="main.css" />
-  <style>
-    .home-content {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-around;
-      align-items: center;
-    }
-  </style>
+  <link rel="stylesheet" href="index.css" />
+  <script src="storage.js"></script>
+  <template id="waiting">
+    <main class="main">
+      <div class="container">
+        <div class="home-content" style="height: 8rem">
+          <p>Waiting...</p>
+        </div>
+        <button class="main-button" style="margin:auto" onclick='cancel()'>Cancel</button>
+      </div>
+    </main>
+  </template>
+  <template id="logged-in">
+    <main class="main">
+      <div class="container">
+        <div class="home-content" style="height: 8rem">
+          <button onclick="findOrCreateMatch()" class="main-button"
+            style="font-size: x-large; padding: 10px 60px">Play</button>
+        </div>
+      </div>
+      <button class="main-button logout-btn" onclick='logout()'>Logout</button>
+    </main>
+  </template>
+  <template id="not-logged-in">
+    <main class="main">
+      <div class="container">
+        <div class="home-content">
+          <button class="main-button" onclick="toLogin()">Login</button>
+          <button class="main-button" onclick='toRegister()'>Register</button>
+        </div>
+      </div>
+    </main>
+  </template>
   <script>
+    var username, waitInterval, gameId;
     function toLogin() {
-      window.location.href = "login.html"
+      window.location.href = "auth/login.html"
     }
     function toRegister() {
-      window.location.href = "register.html"
+      window.location.href = "auth/register.html"
+    }
+    function onLoad() {
+      const creds = getCredentials();
+      username = creds ? creds.username : null;
+      if (username) {
+        handleLoggedIn()
+      } else {
+        handleNotLoggedIn()
+      }
+    }
+
+    function waitForSecondPlayer() {
+      waitInterval = setInterval(() => {
+        const xhr = new XMLHttpRequest();
+        let url = './server/game.php'
+        xhr.open("POST", url, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(JSON.stringify({ game_id: gameId, username, "player-2-joined": true }))
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState === 4) {
+            const res = JSON.parse(xhr.response)
+            if (res.player_joined) {
+              console.log("player joined!", res.opponent)
+              clearInterval(waitInterval)
+              // window.location.href = "../"
+            } else {
+              console.log("still waiting", res.msg)
+            }
+          }
+        }
+      }, 1000)
+      const body = document.querySelector("#body")
+      const waiting = document.getElementById("waiting")
+      body.innerHTML = ""
+      body.appendChild(waiting.content.cloneNode(true))
+    }
+
+    function findOrCreateMatch() {
+      const xhr = new XMLHttpRequest();
+      let url = './server/game.php'
+      xhr.open("POST", url, true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(JSON.stringify({ username, "find-or-create": true }))
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          const res = JSON.parse(xhr.response)
+          if (res.match_found) {
+            console.log("match found!", res.opponent)
+            gameId = res.game_id
+            // window.location.href = "../"
+          } else if (res.game_created) {
+            console.log("game not found, created one", res.game_id)
+            gameId = res.game_id
+            waitForSecondPlayer()
+          } else {
+            console.log("error", res.msg)
+          }
+        }
+      }
+    }
+
+    function cancel() {
+      const xhr = new XMLHttpRequest();
+      let url = './server/game.php'
+      xhr.open("POST", url);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(JSON.stringify({ username, "cancel-game": true }));
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          const res = JSON.parse(xhr.response)
+          console.log('cancel res', res)
+          if (res.ok) {
+            clearInterval(waitInterval);
+            handleLoggedIn()
+          } else {
+            alert(res.msg)
+          }
+        }
+      }
+    }
+
+    function handleLoggedIn() {
+      const body = document.querySelector("#body")
+      const loggedIn = document.getElementById("logged-in")
+      body.innerHTML = ""
+      body.appendChild(loggedIn.content.cloneNode(true))
+    }
+
+    function logout() {
+      clearCredentials()
+      handleNotLoggedIn()
+    }
+
+    function handleNotLoggedIn() {
+      const body = document.querySelector("#body")
+      const notLoggedIn = document.getElementById("not-logged-in")
+      body.innerHTML = ""
+      body.appendChild(notLoggedIn.content.cloneNode(true))
     }
   </script>
 </head>
 
-<body>
-  <main class="page">
-    <div class="home-content">
-      <button onclick="toLogin()">Login</button>
-      <button onclick="toRegister()">Register</button>
-    </div>
-  </main>
+<body onload="onLoad()">
+  <h1>Welcome to Battleship!</h1>
+  <div id="body"></div>
 </body>
 <script>
 </script>
