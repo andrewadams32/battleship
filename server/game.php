@@ -2,7 +2,11 @@
 
 include "connection.php";
 
-if($_SERVER['REQUEST_METHOD'] === 'GET'){} 
+if($_SERVER['REQUEST_METHOD'] === 'GET'){
+  if(isset($_GET['leaderboard'])) {
+    getLeaderBoardStats($conn);
+  }
+} 
 elseif($_SERVER['REQUEST_METHOD'] === 'POST') {
   if ($_SERVER["CONTENT_TYPE"] === "application/json")
     $_POST = json_decode(file_get_contents("php://input"), true) ?: [];
@@ -17,6 +21,27 @@ elseif($_SERVER['REQUEST_METHOD'] === 'POST') {
   } 
 }
 
+//LEADERBOARD
+function getLeaderBoardStats($conn) {
+  $sql = "
+    SELECT winner, COUNT(*) as count 
+    FROM Games
+    GROUP BY winner 
+    ORDER BY COUNT(*) DESC
+  ";
+  $res = $conn->query($sql);
+  $stats = array();
+  if( $res->num_rows > 0) {
+    while($row = $res->fetch_assoc())
+      array_push($stats, array (
+        "player" => $row["winner"],
+        "winCount" => $row["count"]
+      ));
+  }
+  print_r(json_encode($stats));
+}
+
+//GAME SETUP
 function findGame($conn, $username) {
   $sql = "
     SELECT * FROM Games
@@ -113,6 +138,54 @@ function findOrCreateGame($conn, $username) {
       "match_found" => false,
       "game_created" => false,
       "msg" => "error creating game"
+    ));
+  }
+}
+
+
+//GAMEPLAY
+function getGame($conn, $game_id) {
+  $sql = "
+    SELECT * FROM Games
+    WHERE hasStarted='1' AND id='$game_id'
+  ";
+
+  $result = $conn->query($sql);
+  if ($result !== false) {
+    $game = $result->fetch_assoc();
+    echo json_encode(array (
+      "game" => $game,
+    ));
+  } else {
+    echo json_encode(array (
+      "ok" => false,
+      "msg" => $conn->error
+    ));
+  }
+}
+
+//GAMEPLAY
+function updateBoard($conn, $board, $game_id) {
+
+  //TODO : handle win/loss logic here
+
+  //
+
+  $sql = "
+    UPDATE Games
+    SET board = '$board'
+    WHERE id = '$game_id';
+  ";
+
+  $result = $conn->query($sql);
+  if ($result !== false) {
+    echo json_encode(array (
+      "ok" => true,
+    ));
+  } else {
+    echo json_encode(array (
+      "ok" => false,
+      "msg" => $conn->error
     ));
   }
 }
