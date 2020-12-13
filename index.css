@@ -27,3 +27,28 @@ button.logout-btn {
   color: var(--primary-color);
   font-weight: bold;
 }
+
+.links {
+  position: absolute;
+  bottom: 20%;
+  left: 20%;
+  right: 20%;
+  display: flex;
+  justify-content: space-around;
+}
+.links > span {
+  flex: 1;
+  text-align: center;
+}
+
+span > a,
+a:visited {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+
+  border: 1px solid var(--white);
+  border-radius: 5em;
+  width: 10rem;
+  padding: 1rem;
+}
