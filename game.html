@@ -115,6 +115,10 @@
     const lengths = [5, 4, 3, 3, 2]
     const shipNums = [1, 2, 3, 4, 5]
 
+    var time1 = new Date();
+    var timeTimer = setInterval(myTimer, 1000);
+    var powerTimer = setInterval(powersactivate, 1000);
+
     var myBoard;
     var opponentBoard;
     var attacks = [];
@@ -288,6 +292,13 @@
       }
     }
 
+    function myTimer() {
+      var time2 = new Date();
+      var dif = time2 - time1; dif /= 1000;
+      dif = Math.floor(dif);
+      document.getElementById("fortime").innerHTML = "Time elapsed: " + dif;
+    }
+
     function addShips() {
       const tempBoard = makeArray(10, 10);
       const ships = []
@@ -380,7 +391,7 @@
     }
     function attack() {
       if (myTurn) {
-        if (attacks.length < 1) {
+        if (attacks.length > 1) {
           alert("Only attack once!")
           return;
         }
@@ -389,7 +400,7 @@
           if (opponentBoard[attackY][attackX] === 0) {
             opponentBoard[attackY][attackX] = -20 // miss
           } else if (Math.abs(opponentBoard[attackY][attackX]) > 0 && Math.abs(opponentBoard[attackY][attackX]) < 10) { // unhit ship
-            opponentBoard[attackY][attackX] = -opponentBoard[attackY][attackX] // hit
+            opponentBoard[attackY][attackX] = -Math.abs(opponentBoard[attackY][attackX]) // hit
           }
         })
 
@@ -409,9 +420,109 @@
       }
     }
 
+    function attack2() {
+      if (myTurn) {
+        if (attacks.length < 3) {
+          alert("Only attack THRICE!")
+          return;
+        }
+        attacks.map(([attackY, attackX]) => {
+          console.log(attackY, attackX)
+          if (opponentBoard[attackY][attackX] === 0) {
+            opponentBoard[attackY][attackX] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY][attackX]) > 0 && Math.abs(opponentBoard[attackY][attackX]) < 10) { // unhit ship
+            opponentBoard[attackY][attackX] = -Math.abs(opponentBoard[attackY][attackX]) // hit
+          }
+        })
+
+        shipNums.forEach((num) => {
+          if (isSunk(opponentBoard, num)) {
+            for (let i = 0; i < 10; i++) {
+              for (let j = 0; j < 10; j++) {
+                if (Math.abs(opponentBoard[i][j]) === num) {
+                  opponentBoard[i][j] = -100
+                }
+              }
+            }
+          }
+        })
+
+        sendAttack();
+      }
+    }
+    function attack3() {
+      if (myTurn) {
+        if (attacks.length > 1) {
+          alert("Choose center")
+          return;
+        }
+        attacks.map(([attackY, attackX]) => {
+          console.log(attackY, attackX)
+          if (opponentBoard[attackY][attackX] === 0) {
+            opponentBoard[attackY][attackX] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY][attackX]) > 0 && Math.abs(opponentBoard[attackY][attackX]) < 10) { // unhit ship
+            opponentBoard[attackY][attackX] = -Math.abs(opponentBoard[attackY][attackX]) // hit
+          }
+          if (opponentBoard[attackY - 1][attackX] === 0) {
+            opponentBoard[attackY - 1][attackX] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY - 1][attackX - 1]) > 0 && Math.abs(opponentBoard[attackY - 1][attackX]) < 10) { // unhit ship
+            opponentBoard[attackY - 1][attackX] = -Math.abs(opponentBoard[attackY - 1][attackX]) // hit
+          }
+          if (opponentBoard[attackY + 1][attackX] === 0) {
+            opponentBoard[attackY + 1][attackX] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY + 1][attackX]) > 0 && Math.abs(opponentBoard[attackY + 1][attackX]) < 10) { // unhit ship
+            opponentBoard[attackY + 1][attackX] = -Math.abs(opponentBoard[attackY + 1][attackX]) // hit
+          }
+          if (opponentBoard[attackY][attackX + 1] === 0) {
+            opponentBoard[attackY][attackX + 1] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY][attackX + 1]) > 0 && Math.abs(opponentBoard[attackY][attackX - 1]) < 10) { // unhit ship
+            opponentBoard[attackY][attackX + 1] = -Math.abs(opponentBoard[attackY][attackX + 1]) // hit
+          }
+          if (opponentBoard[attackY][attackX - 1] === 0) {
+            opponentBoard[attackY][attackX - 1] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY][attackX - 1]) > 0 && Math.abs(opponentBoard[attackY][attackX + 1]) < 10) { // unhit ship
+            opponentBoard[attackY][attackX - 1] = -Math.abs(opponentBoard[attackY][attackX - 1]) // hit
+          }
+
+
+        })
+
+        shipNums.forEach((num) => {
+          if (isSunk(opponentBoard, num)) {
+            for (let i = 0; i < 10; i++) {
+              for (let j = 0; j < 10; j++) {
+                if (Math.abs(opponentBoard[i][j]) === num) {
+                  opponentBoard[i][j] = -100
+                }
+              }
+            }
+          }
+        })
+
+        sendAttack();
+      }
+    }
+
+    function powersactivate() {
+      var sunkcount = 0;
+      shipNums.forEach((num) => {
+        if (isSunk(myBoard, num)) {
+          sunkcount = sunkcount + 1;
+        }
+      })
+
+      if (sunkcount > 2) {
+        var t = document.getElementById("secret");
+        t.style.display = "block";
+        var r = document.getElementById("secret2");
+        r.style.display = "block";
+        clearInterval(powerTimer)
+      }
+
+    }
+
 
     function isSunk(board, boatNum) {
-      console.log("checking", boatNum)
       let sunk = true;
       for (let i = 0; i < 10; i++) {
         for (let j = 0; j < 10; j++) {
@@ -420,6 +531,7 @@
           }
         }
       }
+      console.log("is sunk? ", board, boatNum, sunk)
       return sunk
     }
 
@@ -483,6 +595,7 @@
 </head>
 
 <body class="background" onload="setup()">
+  <p id="fortime"> </p>
   <div class="container ui-container">
     <h3 id="turn"></h3>
     <h3 id="attacks"></h3>
@@ -497,6 +610,7 @@
       <h2 id="opponent-name"></h2>
       <button onclick="attack();" id="attack-button" class="main-button attack-button">Attack</button>
       <table id="opponent-board"></table>
+
     </div>
   </div>
   <form id="form2" style="background-color: white;">
@@ -549,6 +663,8 @@
     </select>
     <button type="button" onclick=addShips();>Show</button>
     <button type="button" onclick=saveShips();>Save</button>
+    <button type="button" id="secret" style="display:none" onclick="attack2();">OOH BABY A TRIPLE</button>
+    <button type="button" id="secret2" style="display:none" onclick="attack3();">PENTAKILL</button>
   </form>
 
   <iframe width="560" height="315"
