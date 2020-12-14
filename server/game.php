@@ -4,7 +4,7 @@ include "connection.php";
 
 if($_SERVER['REQUEST_METHOD'] === 'GET'){
   if(isset($_GET['leaderboard'])) {
-    getLeaderBoardStats($conn);
+    getLeaderBoardStats($conn, $_GET['sort']);
   }
 } 
 elseif($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -22,13 +22,22 @@ elseif($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 //LEADERBOARD
-function getLeaderBoardStats($conn) {
-  $sql = "
-    SELECT winner, COUNT(*) as count 
-    FROM Games
-    GROUP BY winner 
-    ORDER BY count DESC
-  ";
+function getLeaderBoardStats($conn, $sort) {
+  $sql;
+  if($sort === "wins")
+    $sql = "
+      SELECT winner, COUNT(*) as count 
+      FROM Games
+      GROUP BY winner 
+      ORDER BY count DESC
+    ";
+  elseif($sort === "games")
+    $sql = "
+      SELECT player1, player2, COUNT(*) as count 
+      FROM Games
+      GROUP BY player1
+      ORDER BY count DESC
+    ";
   $res = $conn->query($sql);
   $stats = array();
   if( $res->num_rows > 0) {
@@ -109,11 +118,27 @@ function player2Joined($conn, $username, $game_id) {
   $result = $conn->query($sql);
   $res;
   if ($result->num_rows > 0) {
+
     $game = $result->fetch_assoc();
-    echo json_encode(array (
-      "player_joined" => true,
-      "opponent" => $game['player2']
-    ));
+
+    $sql = "
+      UPDATE Games
+      SET hasStarted = '1'
+      WHERE id='$game_id' AND hasStarted='0' AND player1='$username';
+    ";
+
+    if($conn->query($sql)) {
+      echo json_encode(array (
+        "player_joined" => true,
+        "opponent" => $game['player2']
+      ));
+    } else {
+      echo json_encode(array (
+        "player_joined" => true,
+        "opponent" => $game['player2'],
+        "error" => $conn->error
+      ));
+    }
   } else {
     echo json_encode(array (
       "player_joined" => false,
