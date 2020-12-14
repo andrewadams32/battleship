@@ -4,9 +4,7 @@
 <head>
   <style>
     table tbody tr td {
-      width: 100%;
       border: 1px solid black;
-      height: 100px;
     }
 
     thead {
@@ -23,162 +21,598 @@
       width: 100%;
       height: 100%;
       padding: 3px;
-      background-image: url(ocean.gif);
-      border: 1px solid black;
+      /* background-image: url(ocean.gif); */
+      /* border: 1px solid black; */
       background-size: 100% 200%;
+    }
+
+    .row {
+      height: 50px;
+    }
+
+    .cell {
+      width: 50px;
+      height: 50px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid black;
+      margin: 1px;
+    }
+
+    .game-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      overflow: auto;
+    }
+
+    .ship {
+      background-color: grey;
+    }
+
+    .ship.hit {
+      background-color: orange;
+    }
+
+    .ship.hit.sunk {
+      background-color: red;
+    }
+
+    .miss {
+      background-color: blue;
+    }
+
+    .table-container {
+      width: 100% !important;
+      margin: .5rem;
+      position: relative;
+    }
+
+    .ui-container {
+      margin: auto;
+    }
+
+    .attack-button {
+      position: absolute;
+      right: 1rem;
+      top: 1rem;
+      margin: 0
+    }
+
+    .clear-button {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      margin: 0
     }
   </style>
   <link rel="stylesheet" href="main.css" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Play Battleship</title>
+  <script src="storage.js"></script>
+  <template id="row">
+    <tr class="row">
+      <td class="cell"></td>
+    </tr>
+  </template>
+  <template id="cell">
+    <td class="cell">
+    </td>
+  </template>
+  <script>
+
+    function makeArray(height, width) {
+      var arr = new Array(height)
+      for (var i = 0; i < height; i++)
+        arr[i] = new Array(width).fill(0)
+      return arr
+    }
+
+    const letterMap = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+    const shipNames = ["Carrier", "Battleship", "Cruiser", "Submarine", "Destroyer"]
+    const lengths = [5, 4, 3, 3, 2]
+    const shipNums = [1, 2, 3, 4, 5]
+	
+	var time1 = new Date();
+	var timed = setInterval(myTimer, 1000);
+	var timed = setInterval(powersactivate, 1000);
+	
+    var myBoard;
+    var opponentBoard;
+    var attacks = [];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameId = urlParams.get('game_id');
+
+    const myName = getCredentials().username
+    var player1;
+    var otherPlayerName;
+    var myTurn = false;
+    var listenInterval;
+    var otherPlayerReady = false;
+
+    function getGameData() {
+      const xhr = new XMLHttpRequest();
+      let url = './server/game.php?game=true&game_id=' + gameId
+      xhr.open("GET", url);
+      xhr.send();
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          const res = JSON.parse(xhr.response)
+          if (res.ok) {
+            if (res.game.winner !== null) {
+              alert("Game over! " + res.game.winner + " won!")
+              clearInterval(listenInterval)
+            }
+            console.log('r', myName, res)
+            if (res.game.player1 === myName) {
+              player1 = true;
+              otherPlayerName = res.game.player2
+              if (typeof res.game.player1Board === "object") {
+                myBoard = res.game.player1Board
+              } else myBoard = makeArray(10, 10)
+              if (typeof res.game.player2Board === "object") {
+                opponentBoard = res.game.player2Board
+                otherPlayerReady = true
+              } else {
+                opponentBoard = makeArray(10, 10)
+              }
+            } else {
+              player1 = false;
+              otherPlayerName = res.game.player1
+              if (typeof res.game.player2Board === "object") {
+                myBoard = res.game.player2Board
+              } else myBoard = makeArray(10, 10)
+              if (typeof res.game.player1Board === "object") {
+                opponentBoard = res.game.player1Board
+                otherPlayerReady = true
+              } else {
+                opponentBoard = makeArray(10, 10)
+              }
+            }
+            myTurn = res.game.turn === myName
+            if (myTurn && otherPlayerReady && listenInterval) {
+              console.log("ready")
+              clearInterval(listenInterval)
+            }
+            drawTable(myBoard, "my-board")
+            drawTable(opponentBoard, "opponent-board")
+            drawUI()
+          } else {
+            alert(res.msg)
+          }
+        }
+      }
+    }
+
+    function drawUI() {
+      document.getElementById("turn").innerHTML = myTurn ? "My Turn" : "Opponent's Turn"
+      let showAttacks = attacks.reduce((prev, curr, ci) => {
+        let show = `${letterMap[curr[0]]}, ${curr[1] + 1}`
+        prev.push(show)
+        return prev
+      }, [])
+      document.getElementById("attacks").innerHTML = "Current Attack " + JSON.stringify(showAttacks)
+      document.querySelectorAll("input[type='checkbox']").forEach((ip) => ip.checked = false)
+      attacks.forEach(([y, x]) => {
+        document.getElementById(`ip-${letterMap[y]}${x}`).checked = "on"
+      })
+    }
+
+    function saveShips() {
+      const xhr = new XMLHttpRequest();
+      let url = './server/game.php'
+      xhr.open("POST", url);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(JSON.stringify({ player1, board: myBoard, game_id: gameId, "update-board": true }));
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          const res = JSON.parse(xhr.response)
+          if (res.ok) {
+            console.log('ok')
+          } else alert(res.msg)
+        }
+      }
+    }
+
+    function listen() {
+      getGameData();
+      console.log("test", otherPlayerReady)
+      return setInterval(() => {
+        if (!myTurn || !otherPlayerReady)
+          getGameData();
+      }, 5000)
+    }
+    function setup() {
+      listenInterval = listen()
+      // drawTable(myBoard, "my-board");
+      // drawTable(opponentBoard, "opponent-board");
+      document.getElementById("opponent-name").innerText = "Opponent's Board"
+    }
+
+    function drawTable(tableData, id) {
+      const table = document.getElementById(id)
+      table.innerHTML = ""
+      const rowTemplate = document.getElementById("row")
+      const cellTemplate = document.getElementById("cell")
+      for (let i = -1; i < 10; i++) {
+        let t = document.createElement("tr")
+        let nextRow = rowTemplate.content.cloneNode(true)
+        if (i >= 0) {
+          nextRow.querySelector("td").innerHTML = letterMap[i];
+          for (let j = 0; j < 10; j++) {
+            let cell = cellTemplate.content.cloneNode(true)
+            const td = cell.querySelector("td");
+            td.id = `${id}-${letterMap[i]}${j + 1}`
+            switch (tableData[i][j]) {
+              case -20:
+                td.classList.add("miss")
+                break;
+              case 0:
+                break;
+              case 1:
+              case 2:
+              case 3:
+              case 4:
+              case 5:
+                td.classList.add("ship")
+                break;
+              case -1:
+              case -2:
+              case -3:
+              case -4:
+              case -5:
+                td.classList.add("ship", "hit")
+                break;
+              case -100:
+                td.classList.add("ship", "hit", "sunk")
+                break;
+            }
+            if (id === "opponent-board") {
+              const ip = document.createElement("input")
+              ip.type = "checkbox"
+              ip.id = `ip-${letterMap[i]}${j}`
+              ip.class = "at-ip"
+              ip.addEventListener("change", () => selectFire(letterMap[i], j))
+              td.appendChild(ip)
+            }
+            nextRow.querySelector("tr").appendChild(cell)
+          }
+        } else {
+          for (let j = 0; j < 10; j++) {
+            let cell = document.createElement("td")
+            cell.innerHTML = j + 1
+            cell.className = "cell"
+            nextRow.querySelector("tr").appendChild(cell)
+          }
+        }
+        table.appendChild(nextRow)
+      }
+    }
+
+function myTimer() {
+  var time2 = new Date();
+  var dif = time2-time1; dif /= 1000;
+  dif = Math.floor(dif);
+  document.getElementById("fortime").innerHTML = "Time elapsed: " + dif;
+} 
+
+    function addShips() {
+      const tempBoard = makeArray(10, 10);
+      const ships = []
+      const directions = []
+      let problem = false;
+      shipNames.forEach((name) => {
+        ships.push({ coord: document.getElementById(name).value.toUpperCase(), name });
+      })
+
+      directions.push(document.getElementById("Direction1").value);
+      directions.push(document.getElementById("Direction2").value);
+      directions.push(document.getElementById("Direction3").value);
+      directions.push(document.getElementById("Direction4").value);
+      directions.push(document.getElementById("Direction5").value);
+
+      if (ships.length === 5) {
+        ships.forEach((ship, i) => {
+          let shipY = letterMap.indexOf(ship.coord[0]);
+          let shipX = Number(ship.coord[1]) - 1;
+          console.log("check", directions[i]);
+          switch (directions[i].toLowerCase()) {
+            case "right":
+              if (shipX + lengths[i] > 10) {
+                alert(shipNames[i] + " is out of bounds")
+                return
+              } else if (tempBoard[shipY][shipX] !== 0) {
+                alert(shipNames[i] + " collides with another ship")
+                return
+              } else {
+                for (let j = 0; j < lengths[i]; j++)
+                  tempBoard[shipY][shipX + j] = shipNums[shipNames.indexOf(ship.name)]
+              }
+              break;
+            case "left":
+              if (shipX - lengths[i] < 0) {
+                alert(shipNames[i] + " is out of bounds")
+                return
+              } else if (tempBoard[shipY][shipX] !== 0) {
+                alert(shipNames[i] + " collides with another ship")
+                return
+              } else {
+                for (let j = 0; j < lengths[i]; j++)
+                  tempBoard[shipY][shipX - j] = 1
+              }
+              break;
+            case "up":
+              if (shipY - lengths[i] < 0) {
+                alert(shipNames[i] + " is out of bounds")
+                return
+              } else if (tempBoard[shipY][shipX] !== 0) {
+                alert(shipNames[i] + " collides with another ship")
+                return
+              } else {
+                for (let j = 0; j < lengths[i]; j++)
+                  tempBoard[shipY - j][shipX] = 1
+              }
+              break;
+            case "down":
+              if (shipY + lengths[i] > 10) {
+                alert(shipNames[i] + " is out of bounds")
+                return
+              } else if (tempBoard[shipY][shipX] !== 0) {
+                alert(shipNames[i] + " collides with another ship")
+                return
+              } else {
+                for (let j = 0; j < lengths[i]; j++)
+                  tempBoard[shipY + j][shipX] = 1
+              }
+              break;
+          }
+        })
+      } else console.log("place all ships")
+
+      if (!problem) {
+        myBoard = JSON.parse(JSON.stringify(tempBoard))
+        drawTable(myBoard, "my-board")
+      }
+    }
+
+    function selectFire(Y, X) {
+      let shipY = letterMap.indexOf(Y);
+      let shipX = Number(X);
+
+      const found = attacks.findIndex((at) => {
+        return at[0] === shipY && at[1] === shipX
+      })
+      if (found === -1)
+        attacks.push([shipY, shipX])
+      drawUI()
+    }
+    function attack() {
+      if (myTurn) {
+        if (attacks.length < 1) {
+          alert("Only attack once!")
+          return;
+        }
+        attacks.map(([attackY, attackX]) => {
+          console.log(attackY, attackX)
+          if (opponentBoard[attackY][attackX] === 0) {
+            opponentBoard[attackY][attackX] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY][attackX]) > 0 && Math.abs(opponentBoard[attackY][attackX]) < 10) { // unhit ship
+            opponentBoard[attackY][attackX] = -opponentBoard[attackY][attackX] // hit
+          }
+        })
+
+        shipNums.forEach((num) => {
+          if (isSunk(opponentBoard, num)) {
+            for (let i = 0; i < 10; i++) {
+              for (let j = 0; j < 10; j++) {
+                if (Math.abs(opponentBoard[i][j]) === num) {
+                  opponentBoard[i][j] = -100
+                }
+              }
+            }
+          }
+        })
+
+        sendAttack();
+      }
+    }
+	
+    function attack2() {
+      if (myTurn) {
+        if (attacks.length < 3) {
+          alert("Only attack THRICE!")
+          return;
+        }
+        attacks.map(([attackY, attackX]) => {
+          console.log(attackY, attackX)
+          if (opponentBoard[attackY][attackX] === 0) {
+            opponentBoard[attackY][attackX] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY][attackX]) > 0 && Math.abs(opponentBoard[attackY][attackX]) < 10) { // unhit ship
+            opponentBoard[attackY][attackX] = -opponentBoard[attackY][attackX] // hit
+          }
+        })
+
+        shipNums.forEach((num) => {
+          if (isSunk(opponentBoard, num)) {
+            for (let i = 0; i < 10; i++) {
+              for (let j = 0; j < 10; j++) {
+                if (Math.abs(opponentBoard[i][j]) === num) {
+                  opponentBoard[i][j] = -100
+                }
+              }
+            }
+          }
+        })
+
+        sendAttack();
+      }
+    }
+    function attack3() {
+      if (myTurn) {
+        if (attacks.length < 1) {
+          alert("Only attack THRICE!")
+          return;
+        }
+        attacks.map(([attackY, attackX]) => {
+          console.log(attackY, attackX)
+          if (opponentBoard[attackY][attackX] === 0) {
+            opponentBoard[attackY][attackX] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY][attackX]) > 0 && Math.abs(opponentBoard[attackY][attackX]) < 10) { // unhit ship
+            opponentBoard[attackY][attackX] = -opponentBoard[attackY][attackX] // hit
+          }
+          if (opponentBoard[attackY-1][attackX-1] === 0) {
+            opponentBoard[attackY-1][attackX-1] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY-1][attackX-1]) > 0 && Math.abs(opponentBoard[attackY-1][attackX-1]) < 10) { // unhit ship
+            opponentBoard[attackY-1][attackX-1] = -opponentBoard[attackY-1][attackX-1] // hit
+          }
+		  	if (opponentBoard[attackY+1][attackX+1] === 0) {
+            opponentBoard[attackY+1][attackX+1] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY+1][attackX+1]) > 0 && Math.abs(opponentBoard[attackY-1][attackX-1]) < 10) { // unhit ship
+            opponentBoard[attackY+1][attackX+1] = -opponentBoard[attackY+1][attackX+1] // hit
+          }
+		  	if (opponentBoard[attackY+10][attackX+10] === 0) {
+            opponentBoard[attackY+10][attackX+10] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY+10][attackX+10]) > 0 && Math.abs(opponentBoard[attackY-1][attackX-1]) < 10) { // unhit ship
+            opponentBoard[attackY+10][attackX+10] = -opponentBoard[attackY+10][attackX+10] // hit
+          }
+		  		  	if (opponentBoard[attackY-10][attackX-10] === 0) {
+            opponentBoard[attackY-10][attackX-10] = -20 // miss
+          } else if (Math.abs(opponentBoard[attackY-2][attackX-2]) > 0 && Math.abs(opponentBoard[attackY-1][attackX-1]) < 10) { // unhit ship
+            opponentBoard[attackY-10][attackX-10] = -opponentBoard[attackY+1][attackX-10] // hit
+          }
+		  
+		  
+        })
+
+        shipNums.forEach((num) => {
+          if (isSunk(opponentBoard, num)) {
+            for (let i = 0; i < 10; i++) {
+              for (let j = 0; j < 10; j++) {
+                if (Math.abs(opponentBoard[i][j]) === num) {
+                  opponentBoard[i][j] = -100
+                }
+              }
+            }
+          }
+        })
+
+        sendAttack();
+      }
+    }		
+	
+	function powersactivate(){
+	var sunkcount = 0;
+	        shipNums.forEach((num) => {
+          if (isSunk(myBoard, num)) {
+			sunkcount = sunkcount + 1;
+          }
+        })
+		
+	if(sunkcount > 2){
+	var t = document.getElementById("secret");
+	t.style.display = "block";
+	var r = document.getElementById("secret2");
+	r.style.display = "block";
+	}
+		
+	}
+
+
+    function isSunk(board, boatNum) {
+      console.log("checking", boatNum)
+      let sunk = true;
+      for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 10; j++) {
+          if (Math.abs(board[i][j]) === boatNum) {
+            if (board[i][j] > 0) sunk = false;
+          }
+        }
+      }
+      return sunk
+    }
+
+    function clearAttacks() {
+      attacks = []
+      drawUI();
+    }
+
+    function sendAttack() {
+      console.log("opponent board", opponentBoard)
+      attacks.map((at) => console.log("at", opponentBoard[at[0]][at[1]]))
+
+      const gameOver = isGameOver();
+      let payload = {
+        player1,
+        board: opponentBoard,
+        game_id: gameId,
+        "send-attack": true
+      };
+      if (gameOver.gameOver)
+        Object.assign(payload, {
+          winner: gameOver.winner,
+          loser: gameOver.loser
+        })
+      const xhr = new XMLHttpRequest();
+      let url = './server/game.php'
+      xhr.open("POST", url);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(JSON.stringify(payload));
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          const res = JSON.parse(xhr.response)
+          if (res.ok) {
+            console.log('ok')
+            listenInterval = listen()
+            attacks = []
+          } else alert(res.msg)
+        }
+      }
+    }
+
+    function isGameOver() {
+      var iLost = true;
+      var uLost = true;
+      for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 10; j++) {
+          if (myBoard[i][j] > 0) iLost = false;
+          if (opponentBoard[i][j] > 0) uLost = false;
+        }
+      }
+      console.log("board", myBoard, "o", opponentBoard)
+      let loser = uLost ? otherPlayerName : iLost ? myName : ""
+      let winner = uLost ? myName : iLost ? otherPlayerName : ""
+      return {
+        gameOver: iLost && uLost ? false : iLost || uLost,
+        winner: winner,
+        loser: loser
+      }
+    }
+  </script>
 </head>
 
-<body class="background" onload="insertObject();">
-  <script>
-    var board = new Array(100).fill(0);
-    function insertObject() {
-
-      var myTable = document.getElementById('tableData');
-      tableData.style.cssText = 'height:60px;width:90%;border: 1px solid black;';
-      for (i = 0; i < 10; i++) {
-        var row = document.createElement('tr');
-        row.style.cssText = 'border: 1px solid black'
-        //var rowObj = data[i];
-        for (var u = 0; u < 10; u++) {
-          var dataEl = document.createElement('td');
-          dataEl.id = (i + (u * 10));
-          console.log(dataEl.id);
-          dataEl.innerHTML = '<input type = "checkbox">';
-          dataEl.style.cssText = 'height:60px;width:10.2%;border: 1px solid black;';
-          row.appendChild(dataEl);
-        }
-        myTable.appendChild(row);
-      }
-
-
-
-      /*for (var i = 0; i < board.length; i++) {
-        board[i] = new Array(10);
-        for(var k = 0; k < 10; k++){ 
-        board[i][k] =5;
-        }
-      }
-      for (var o = 0; o < board.length; o++) {
-      
-        for(var g = 0; g < 10; g++){
-      board[o][g] = 5;  
-       console.log(board[0][0])
-        }
-      }*/
-      var r = document.getElementById(12);
-      var w = r.innerHTML;
-
-
-      w = '<input type = "button" checked>';
-      //console.log(r);
-      //console.log(w);
-    }
-
-    function setarray() {
-      var a = getElementById("Carrier");
-
-    }
-    function coords() {
-      var ships = new Array(5);
-      var shipsdir = new Array(5);
-      var e = document.getElementById("Carrier").value;
-      var d = document.getElementById("Battleship").value;
-      var c = document.getElementById("Cruiser").value;
-      var b = document.getElementById("Submarine").value;
-      var a = document.getElementById("Destroyer").value;
-      var f = document.getElementById("Direction1").value;
-      var g = document.getElementById("Direction2").value;
-      var h = document.getElementById("Direction3").value;
-      var i = document.getElementById("Direction4").value;
-      var j = document.getElementById("Direction5").value;
-
-      shipsdir[4] = f;
-      shipsdir[3] = g;
-      shipsdir[2] = h;
-      shipsdir[1] = i;
-      shipsdir[0] = j;
-
-      ships[0] = a;
-      ships[1] = b;
-      ships[2] = c;
-      ships[3] = d;
-      ships[4] = e;
-      var boatlen = 1;
-      for (var i = 0; i < ships.length; i++) {
-        var str = ships[i];
-        var dir = shipsdir[i];
-        var dir2 = 0;
-        var letter = 0;
-        var str2 = str.charAt(1);
-        var num = 0;
-        var loc = 0;
-        var tmp = 0;
-        var counter = 0;
-
-        if (dir == "Right") { dir2 = 10; }
-        if (dir == "Left") { dir2 = -10; }
-        if (dir == "Up") { dir2 = -1; }
-        if (dir == "Down") { dir2 = 1; }
-
-        if (str.charAt(0) == 'A') { letter = 0 }
-        if (str.charAt(0) == 'B') { letter = 1 }
-        if (str.charAt(0) == 'C') { letter = 2 }
-        if (str.charAt(0) == 'D') { letter = 3 }
-        if (str.charAt(0) == 'E') { letter = 4 }
-        if (str.charAt(0) == 'F') { letter = 5 }
-        if (str.charAt(0) == 'G') { letter = 6 }
-        if (str.charAt(0) == 'H') { letter = 7 }
-        if (str.charAt(0) == 'I') { letter = 8 }
-        if (str.charAt(0) == 'J') { letter = 9 }
-        num = (parseInt(str2)) - 1;
-        loc = (num * 10) + letter;
-        var box = document.getElementById(loc);
-        console.log(box);
-        //var color = document.getElementById(box);
-
-
-        for (var t = 0; t < boatlen; t++) {
-          board[loc] = 1;
-          box.style.backgroundColor = "Gray"
-          //box.style.backgroundColor="Gray"
-          tmp2 = (loc + dir2);
-          tmp = document.getElementById(tmp2);
-          tmp.style.backgroundColor = "Gray";
-          if (t > 0) {
-            tmp2 = tmp2 + dir2; tmp = document.getElementById(tmp2);
-            tmp.style.backgroundColor = "Gray";
-          }
-          if (t > 2) {
-            tmp2 = tmp2 + dir2; tmp = document.getElementById(tmp2);
-            tmp.style.backgroundColor = "Gray";
-          }
-          if (t > 3) {
-            tmp2 = tmp2 + dir2; tmp = document.getElementById(tmp2);
-            tmp.style.backgroundColor = "Gray";
-          }
-          if (t > 4) {
-            tmp2 = tmp2dir2; tmp = document.getElementById(tmp2);
-            tmp.style.backgroundColor = "Gray";
-          }
-        }
-        boatlen = boatlen + 1;
-        //box.style.backgroundColor="Gray"
-      }
-    }
-
-  </script>
-  Game Here
-  <form id="form">
-
-  </form>
-  <table id="tableData"></table>
-  <form id="form2" style="background-color: white;width:93%">
+<body class="background" onload="setup()">
+<p id= "fortime"> </p>
+  <div class="container ui-container">
+    <h3 id="turn"></h3>
+    <h3 id="attacks"></h3>
+  </div>
+  <div class="game-container">
+    <div class="container table-container">
+      <h2>My Board</h2>
+      <table id="my-board"></table>
+    </div>
+    <div class="container table-container">
+      <button onclick="clearAttacks();" id="attack-button" class="main-button clear-button">Clear Attacks</button>
+      <h2 id="opponent-name"></h2>
+      <button onclick="attack();" id="attack-button" class="main-button attack-button">Attack</button>
+      <table id="opponent-board"></table>
+	  
+    </div>
+  </div>
+  <form id="form2" style="background-color: white;">
 
     Carrier
     <input type="text" maxlength="2" style="width: 40px" id="Carrier"></input>
@@ -226,7 +660,10 @@
       <option value="Up">Up</option>
       <option value="Down">Down</option>
     </select>
-    <button type="button" onclick=coords();>Set</button>
+    <button type="button" onclick=addShips();>Show</button>
+    <button type="button" onclick=saveShips();>Save</button>
+	<button type="button" id ="secret" style= "display:none" onclick="attack2();" >OOH BABY A TRIPLE</button>
+	<button type="button" id ="secret2" style= "display:none" onclick="attack3();" >PENTAKILL</button>
   </form>
 
   <iframe width="560" height="315"

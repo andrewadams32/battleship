@@ -39,3 +39,15 @@ h1 {
 .mt-1 {
   margin-top: 1rem;
 }
+
+button {
+  cursor: pointer;
+  border-radius: 5em;
+  color: var(--white);
+  background: linear-gradient(to right, var(--bg-color), var(--primary-color));
+  border: 0;
+  padding: 10px 30px;
+  min-width: 8rem;
+  margin: 1rem;
+  font-size: 16px;
+}
