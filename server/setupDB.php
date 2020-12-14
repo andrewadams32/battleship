@@ -48,11 +48,11 @@
       id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       player1 VARCHAR(30) NOT NULL,
       player2 VARCHAR(30),
-      winner VARCHAR(30),
-      loser VARCHAR(30),
+      winner VARCHAR(30) DEFAULT NULL,
+      loser VARCHAR(30) DEFAULT NULL,
       hasStarted BOOLEAN DEFAULT FALSE,
-      player1Board TINYTEXT,
-      player2Board TINYTEXT,
+      player1Board TEXT,
+      player2Board TEXT,
       turn VARCHAR(30)
     )";
     

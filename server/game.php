@@ -4,7 +4,9 @@ include "connection.php";
 
 if($_SERVER['REQUEST_METHOD'] === 'GET'){
   if(isset($_GET['leaderboard'])) {
-    getLeaderBoardStats($conn);
+    getLeaderBoardStats($conn, $_GET['sort']);
+  } elseif(isset($_GET['game'])) {
+    getGame($conn, $_GET['game_id']);
   }
 } 
 elseif($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -18,17 +20,37 @@ elseif($_SERVER['REQUEST_METHOD'] === 'POST') {
     cancelGame($conn, $_POST['username']);
   } elseif(isset($_POST['player-2-joined'])) {
     player2Joined($conn, $_POST['username'], $_POST['game_id']);
-  } 
+  } elseif(isset($_POST['update-board'])) {
+    updateBoard($conn, $_POST['board'], $_POST['player1'], $_POST['game_id']);
+  } elseif(isset($_POST['send-attack'])) {
+    if(isset($_POST['winner'])) {
+      ob_start();
+      sendAttack($conn, $_POST['player1'], $_POST['board'], $_POST['game_id']);
+      ob_end_clean();
+      endGame($conn, $_POST['winner'], $_POST['loser'], $_POST['game_id']);
+    } else {
+      sendAttack($conn, $_POST['player1'], $_POST['board'], $_POST['game_id']);
+    }
+  }
 }
 
 //LEADERBOARD
-function getLeaderBoardStats($conn) {
-  $sql = "
-    SELECT winner, COUNT(*) as count 
-    FROM Games
-    GROUP BY winner 
-    ORDER BY count DESC
-  ";
+function getLeaderBoardStats($conn, $sort) {
+  $sql;
+  if($sort === "wins")
+    $sql = "
+      SELECT winner, COUNT(*) as count 
+      FROM Games
+      GROUP BY winner 
+      ORDER BY count DESC
+    ";
+  elseif($sort === "games")
+    $sql = "
+      SELECT player1, player2, COUNT(*) as count 
+      FROM Games
+      GROUP BY player1
+      ORDER BY count DESC
+    ";
   $res = $conn->query($sql);
   $stats = array();
   if( $res->num_rows > 0) {
@@ -45,12 +67,12 @@ function getLeaderBoardStats($conn) {
 function findGame($conn, $username) {
   $sql = "
     SELECT * FROM Games
-    WHERE hasStarted='0' AND player1 <> $username AND player2 IS NULL
+    WHERE hasStarted='0' AND player1 <> '$username' AND player2 IS NULL
     LIMIT 1
   ";
 
   $result = $conn->query($sql);
-  if ($result !== false) {
+  if ($result->num_rows > 0) {
     $game = $result->fetch_assoc();
     $res = array (
       "match_found" => true,
@@ -68,8 +90,8 @@ function findGame($conn, $username) {
 
 function makeGame($conn, $username) {
   $sql = "
-    INSERT INTO Games (player1)
-    VALUES ('$username')
+    INSERT INTO Games (player1, turn)
+    VALUES ('$username', '$username')
   ";
   return $conn->query($sql);
 }
@@ -109,11 +131,27 @@ function player2Joined($conn, $username, $game_id) {
   $result = $conn->query($sql);
   $res;
   if ($result->num_rows > 0) {
+
     $game = $result->fetch_assoc();
-    echo json_encode(array (
-      "player_joined" => true,
-      "opponent" => $game['player2']
-    ));
+
+    $sql = "
+      UPDATE Games
+      SET hasStarted = '0'
+      WHERE id='$game_id' AND hasStarted='0' AND player1='$username';
+    ";
+
+    if($conn->query($sql)) {
+      echo json_encode(array (
+        "player_joined" => true,
+        "opponent" => $game['player2']
+      ));
+    } else {
+      echo json_encode(array (
+        "player_joined" => true,
+        "opponent" => $game['player2'],
+        "error" => $conn->error
+      ));
+    }
   } else {
     echo json_encode(array (
       "player_joined" => false,
@@ -137,24 +175,27 @@ function findOrCreateGame($conn, $username) {
     } else echo json_encode(array (
       "match_found" => false,
       "game_created" => false,
-      "msg" => "error creating game"
+      "msg" => $conn->error
     ));
   }
 }
 
-
 //GAMEPLAY
+
 function getGame($conn, $game_id) {
   $sql = "
     SELECT * FROM Games
-    WHERE hasStarted='1' AND id='$game_id'
+    WHERE id='$game_id'
   ";
 
   $result = $conn->query($sql);
   if ($result !== false) {
     $game = $result->fetch_assoc();
+    $game["player1Board"] = unserialize($game["player1Board"]);
+    $game["player2Board"] = unserialize($game["player2Board"]);
     echo json_encode(array (
       "game" => $game,
+      "ok" => true
     ));
   } else {
     echo json_encode(array (
@@ -164,16 +205,81 @@ function getGame($conn, $game_id) {
   }
 }
 
-//GAMEPLAY
-function updateBoard($conn, $board, $game_id) {
+function sendAttack($conn, $player1, $otherBoard, $game_id) {
+  
+  $sql = "
+    SELECT * FROM Games
+    WHERE id='$game_id'
+  ";
 
-  //TODO : handle win/loss logic here
+  $result = $conn->query($sql);
+  if ($result !== false) {
+    $game = $result->fetch_assoc();
+    $nextTurn = $game['turn'] === $game['player1'] ? $game['player2'] : $game['player1'];
+    $serialized_board = serialize($otherBoard);
 
-  //
+    if($player1) {
+      $sql = "
+        UPDATE Games
+        SET player2Board = '$serialized_board', turn = '$nextTurn', hasStarted='1'
+        WHERE id = '$game_id';
+      ";
+    } else {
+      $sql = "
+        UPDATE Games
+        SET player1Board = '$serialized_board', turn = '$nextTurn'
+        WHERE id = '$game_id';
+      ";
+    }
+  
+    $result = $conn->query($sql);
+    if ($result !== false) {
+      echo json_encode(array (
+        "ok" => true
+      ));
+    } else {
+      echo json_encode(array (
+        "ok" => false,
+        "msg" => $conn->error
+      ));
+    }
+  }
+}
 
+function updateBoard($conn, $board, $player1, $game_id) {
+  $serialized_board = serialize($board);
+
+  if($player1) {
+    $sql = "
+      UPDATE Games
+      SET player1Board = '$serialized_board'
+      WHERE id = '$game_id';
+    ";
+  } else {
+    $sql = "
+      UPDATE Games
+      SET player2Board = '$serialized_board'
+      WHERE id = '$game_id';
+    ";
+  }
+
+  $result = $conn->query($sql);
+  if ($result !== false) {
+    echo json_encode(array (
+      "ok" => true,
+    ));
+  } else {
+    echo json_encode(array (
+      "ok" => false,
+      "msg" => $conn->error
+    ));
+  }
+}
+
+function endGame($conn, $winner, $loser, $game_id) {
   $sql = "
     UPDATE Games
-    SET board = '$board'
+    SET winner='$winner', loser='$loser', turn=''
     WHERE id = '$game_id';
   ";
 

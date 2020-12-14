@@ -70,7 +70,7 @@
             if (res.player_joined) {
               console.log("player joined!", res.opponent)
               clearInterval(waitInterval)
-              // window.location.href = "../"
+              window.location.href = "game.html?game_id=" + gameId
             } else {
               console.log("still waiting", res.msg)
             }
@@ -95,7 +95,7 @@
           if (res.match_found) {
             console.log("match found!", res.opponent)
             gameId = res.game_id
-            // window.location.href = "../"
+            window.location.href = "game.html?game_id=" + res.game_id
           } else if (res.game_created) {
             console.log("game not found, created one", res.game_id)
             gameId = res.game_id
@@ -157,7 +157,5 @@
     <span><a href="contact.html">Contact</a></span>
   </div>
 </body>
-<script>
-</script>
 
 </html>
