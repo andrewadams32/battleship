@@ -34,8 +34,11 @@
   </template>
   <script>
     function getLeaderBoard() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sort = urlParams.get('sort');
+
       const xhr = new XMLHttpRequest();
-      const url = "./server/game.php?leaderboard=true"
+      const url = "./server/game.php?leaderboard=true&sort=" + sort
       xhr.open("GET", url)
       xhr.send()
       xhr.onreadystatechange = () => {
